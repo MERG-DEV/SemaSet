@@ -1,5 +1,6 @@
 VERSION 5.00
 Object = "{648A5603-2C6E-101B-82B6-000000000014}#1.1#0"; "MSCOMM32.OCX"
+Object = "{F9043C88-F6F2-101A-A3C9-08002B2F49FB}#1.2#0"; "COMDLG32.OCX"
 Begin VB.Form sema4SetForm 
    BorderStyle     =   0  'None
    Caption         =   "Sem4Set"
@@ -13,6 +14,21 @@ Begin VB.Form sema4SetForm
    ShowInTaskbar   =   0   'False
    StartUpPosition =   3  'Windows Default
    Visible         =   0   'False
+   Begin VB.CommandButton setallButton 
+      Caption         =   "Set All"
+      Height          =   375
+      Left            =   2880
+      TabIndex        =   65
+      Top             =   1560
+      Width           =   975
+   End
+   Begin MSComDlg.CommonDialog settingsFileDialog 
+      Left            =   3600
+      Top             =   -360
+      _ExtentX        =   847
+      _ExtentY        =   847
+      _Version        =   393216
+   End
    Begin VB.Frame servoSettingOptionGroup 
       BorderStyle     =   0  'None
       Height          =   3495
@@ -346,7 +362,7 @@ Begin VB.Form sema4SetForm
       Height          =   375
       Left            =   2880
       TabIndex        =   5
-      Top             =   1680
+      Top             =   2520
       Width           =   975
    End
    Begin VB.CommandButton resetButton 
@@ -354,7 +370,7 @@ Begin VB.Form sema4SetForm
       Height          =   375
       Left            =   2880
       TabIndex        =   3
-      Top             =   2640
+      Top             =   3480
       Width           =   975
    End
    Begin VB.HScrollBar valueScroller 
@@ -371,7 +387,7 @@ Begin VB.Form sema4SetForm
       Height          =   375
       Left            =   2880
       TabIndex        =   1
-      Top             =   2160
+      Top             =   3000
       Width           =   975
    End
    Begin VB.CommandButton runButton 
@@ -379,12 +395,12 @@ Begin VB.Form sema4SetForm
       Height          =   375
       Left            =   2880
       TabIndex        =   0
-      Top             =   1200
+      Top             =   2040
       Width           =   975
    End
-   Begin MSCommLib.MSComm ComPort 
+   Begin MSCommLib.MSComm comPort 
       Left            =   3000
-      Top             =   3240
+      Top             =   -480
       _ExtentX        =   1005
       _ExtentY        =   1005
       _Version        =   393216
@@ -392,13 +408,34 @@ Begin VB.Form sema4SetForm
       InBufferSize    =   128
       OutBufferSize   =   128
    End
+   Begin VB.Label connectionText 
+      Alignment       =   1  'Right Justify
+      BackColor       =   &H8000000E&
+      Caption         =   "Com1"
+      Height          =   255
+      Left            =   3360
+      TabIndex        =   67
+      Top             =   1200
+      Width           =   495
+   End
+   Begin VB.Label connectionLabel 
+      Alignment       =   1  'Right Justify
+      AutoSize        =   -1  'True
+      Caption         =   "Connection:"
+      Height          =   195
+      Left            =   3000
+      TabIndex        =   66
+      Top             =   960
+      Width           =   855
+   End
    Begin VB.Label compatabilityLabel 
+      Alignment       =   1  'Right Justify
       AutoSize        =   -1  'True
       Caption         =   "Compatability:"
       Height          =   195
       Left            =   2880
       TabIndex        =   64
-      Top             =   120
+      Top             =   360
       Width           =   975
    End
    Begin VB.Label compatabilityText 
@@ -408,7 +445,7 @@ Begin VB.Form sema4SetForm
       Height          =   255
       Left            =   3360
       TabIndex        =   63
-      Top             =   360
+      Top             =   600
       Width           =   495
    End
    Begin VB.Label servo4Label 
@@ -573,17 +610,14 @@ Begin VB.Form sema4SetForm
       End
       Begin VB.Menu fileOpenMenuItem 
          Caption         =   "&Open"
-         Enabled         =   0   'False
          Shortcut        =   ^O
       End
       Begin VB.Menu fileSaveMenuItem 
          Caption         =   "&Save"
-         Enabled         =   0   'False
          Shortcut        =   ^S
       End
       Begin VB.Menu fileSaveAsMenuItem 
          Caption         =   "Save &As"
-         Enabled         =   0   'False
       End
       Begin VB.Menu fileExitMenuItem 
          Caption         =   "E&xit"
@@ -624,8 +658,8 @@ Const SERVO4_SETTINGS As Integer = 16
 ' Number of setting values for Sema4
 Const SEMA4_SETTINGS  As Integer = 40
 
-' Number of times to send a non streaming command string
-Const CMND_ITTERATIONS As Integer = 20
+' Number of times to send a non streaming command or setting string
+Const SEND_ITTERATIONS As Integer = 20
 
 ' Default value to assign to new setting value
 Const DEFAULT_SETTING As Integer = 127
@@ -636,20 +670,28 @@ Const SETTING_BASE  As Integer = 65 ' ASCII A
 Const STORE_COMMAND As String = "@"
 Const RESET_COMMAND As String = "#"
 
-Dim settingValue(0 To (SEMA4_SETTINGS - 1)) As Integer
+' Compatability names
+Const servo4CompatabilityText As String = "Servo4"
+Const sema4CompatabilityText  As String = "Sema4"
+
+Dim settingValue(0 To (SEMA4_SETTINGS - 1))  As Integer
 Dim settingLookup(0 To (SEMA4_SETTINGS - 1)) As Integer
 
-Dim settingIndex As Integer
-Dim currentMode  As OperatingMode
+Dim settingIndex    As Integer
+Dim settingsChanged As Boolean
+
+Dim settingsFilename As String
+
+Dim currentMode     As OperatingMode
 
 Private Sub openComPort(newComPortNumber As Integer)
 
-If True = ComPort.PortOpen Then
-    ComPort.PortOpen = False
+If True = comPort.PortOpen Then
+    comPort.PortOpen = False
 End If
 
-ComPort.CommPort = newComPortNumber
-ComPort.PortOpen = True
+comPort.CommPort = newComPortNumber
+comPort.PortOpen = True
 
 End Sub
 
@@ -659,7 +701,9 @@ Dim newComPortName As String
 Dim newComPortNumber As Integer
 
 ' Prompt user to select COM port connected to Servo4
-newComPortName = InputBox("Select COM Port", "COM Port Selection", oldComPortNumber)
+newComPortName = InputBox("Select COM Port", _
+                          "COM Port Selection", _
+                          oldComPortNumber)
 
 ' Convert entered COM Port string to an integer value
 newComPortNumber = Val(newComPortName)
@@ -668,21 +712,22 @@ If (1 > newComPortNumber) Then
     End
 End If
 
+connectionText.Caption = "Com" + newComPortName
+
 openComPort (newComPortNumber)
 
 End Sub
 
 Private Sub changeComPort()
 
-selectComPort (ComPort.CommPort)
+selectComPort comPort.CommPort
 
 End Sub
 
 Private Sub comPortFailed()
 
-Dim dummy As Integer
+MsgBox "COM Port failed, " + Error, vbOKOnly, "Error"
 
-dummy = MsgBox("COM Port failed", vbOKOnly, "Error")
 changeComPort
 
 End Sub
@@ -691,8 +736,13 @@ Private Sub setRunningMode()
 
 currentMode = running
 
-optCompatSema4MenuItem.Enabled = True
-optCompatServo4MenuItem.Enabled = True
+If compatabilityText.Caption = servo4CompatabilityText Then
+    optCompatSema4MenuItem.Enabled = True
+    optCompatServo4MenuItem.Enabled = False
+Else
+    optCompatSema4MenuItem.Enabled = False
+    optCompatServo4MenuItem.Enabled = True
+End If
 
 runButton.Enabled = False
 setButton.Enabled = True
@@ -715,18 +765,16 @@ valueScroller.Enabled = True
 
 End Sub
 
-Private Sub streamSetting()
+Private Sub streamCurrentSetting()
 
 On Error GoTo comPortFailure
 
-Dim dummy         As Integer
-
 While (setting = currentMode)
     ' Perform event dispatch to keep GUI alive, allows currentMode to be changed
-    dummy = DoEvents
+    DoEvents
 
-    ' Send setting message for currently selected setting
-    ComPort.Output = Chr(SYNCH_BYTE) _
+    ' Send setting message for currently selected setting and value
+    comPort.Output = Chr(SYNCH_BYTE) _
                      + Chr(SETTING_BASE + settingLookup(settingIndex)) _
                      + Format(settingValue(settingIndex), "000")
 Wend
@@ -738,28 +786,44 @@ comPortFailure:
 
 End Sub
 
-Private Sub sendCommand(commandCharacter As String)
+Private Sub sendCommand(commandCharacter As String, _
+                        Optional commandValue As Integer = 0)
 
 On Error GoTo comPortFailure
 
-Dim dummy        As Integer
-Dim n            As Integer
+Dim n As Integer
 
-For n = 1 To CMND_ITTERATIONS
-    ' Perform event dispatch to keep GUI alive
-    dummy = DoEvents
+For n = 1 To SEND_ITTERATIONS
+    ' Perform event dispatch to keep GUI alive, allows currentMode to be changed
+    DoEvents
 
     ' Send command message
-    ComPort.Output = Chr(SYNCH_BYTE) _
+    comPort.Output = Chr(SYNCH_BYTE) _
                      + commandCharacter _
-                     + Format(settingValue(settingIndex), "000")
-
+                     + Format(commandValue, "000")
 Next
 
 Exit Sub
 
 comPortFailure:
     comPortFailed
+
+End Sub
+
+Private Sub sendCurrentSettings()
+
+sema4SetForm.MousePointer = vbHourglass
+
+Dim sendIndex As Integer
+
+For sendIndex = LBound(settingValue) To UBound(settingValue)
+    If servoSettingOption(sendIndex).Enabled Then
+        sendCommand Chr(SETTING_BASE + settingLookup(sendIndex)), _
+                    settingValue(sendIndex)
+    End If
+Next
+
+sema4SetForm.MousePointer = vbDefault
 
 End Sub
 
@@ -771,8 +835,86 @@ For settingIndex = LBound(settingValue) To UBound(settingValue)
     settingValue(settingIndex) = DEFAULT_SETTING
 Next
 
+settingsChanged = True
 settingIndex = 0
 servoSettingOption(settingIndex).Value = True
+valueScroller.Value = settingValue(settingIndex)
+
+End Sub
+
+Private Sub loadSettings()
+
+setRunningMode
+
+On Error GoTo errorCancel
+
+settingsFileDialog.ShowOpen
+settingsFilename = settingsFileDialog.FileName
+
+If "" = settingsFilename Then
+    GoTo errorCancel
+End If
+
+Open settingsFilename For Input As #1
+
+Dim loadedCompatabilityText As String
+
+Input #1, loadedCompatabilityText
+
+If loadedCompatabilityText <> compatabilityText.Caption Then
+    If loadedCompatabilityText = servo4CompatabilityText Then
+        setServo4Compatabillity
+    Else
+        setSema4Compatabillity
+    End If
+End If
+
+settingIndex = LBound(settingValue)
+
+Do Until (EOF(1) Or (UBound(settingValue) < settingIndex))
+    Input #1, settingValue(settingIndex)
+    settingIndex = 1 + settingIndex
+Loop
+
+Close #1
+
+settingsChanged = False
+settingIndex = 0
+servoSettingOption(settingIndex).Value = True
+valueScroller.Value = settingValue(settingIndex)
+
+errorCancel:
+
+End Sub
+
+Private Sub saveSettings()
+
+On Error GoTo errorCancel
+
+If "" = settingsFilename Then
+    settingsFileDialog.ShowSave
+    settingsFilename = settingsFileDialog.FileName
+End If
+
+If "" = settingsFilename Then
+    MsgBox "Filename blank, settings not saved", vbOKOnly, "Save filename blank"
+End If
+
+Open settingsFilename For Output As #1
+
+Print #1, compatabilityText.Caption
+
+Dim outputIndex As Integer
+
+For outputIndex = LBound(settingValue) To UBound(settingValue)
+    Print #1, settingValue(outputIndex)
+Next
+
+Close #1
+
+settingsChanged = False
+
+errorCancel:
 
 End Sub
 
@@ -798,8 +940,11 @@ Next
 
 settingIndex = 0
 servoSettingOption(settingIndex).Value = True
+valueScroller.Value = settingValue(settingIndex)
 
-compatabilityText.Caption = "Sema4"
+compatabilityText.Caption = sema4CompatabilityText
+optCompatSema4MenuItem.Enabled = False
+optCompatServo4MenuItem.Enabled = True
 
 End Sub
 
@@ -816,14 +961,24 @@ Next
 
 settingIndex = 0
 servoSettingOption(settingIndex).Value = True
+valueScroller.Value = settingValue(settingIndex)
 
-compatabilityText.Caption = "Servo4"
+compatabilityText.Caption = servo4CompatabilityText
+optCompatSema4MenuItem.Enabled = True
+optCompatServo4MenuItem.Enabled = False
 
 End Sub
 
 Private Sub Form_Load()
 
-selectComPort (1)
+settingsFileDialog.Filter = "Sema4Set Files (*.sm4)|*.sm4" _
+                            + "|Text Files (*.txt)|*.txt" _
+                            + "!All Files (*.*)|*.*"
+settingsFileDialog.FilterIndex = 1
+
+settingsFilename = ""
+
+selectComPort 1
 newSettings
 setSema4Compatabillity
 
@@ -840,6 +995,25 @@ End Sub
 Private Sub fileNewMenuItem_Click()
 
 newSettings
+
+End Sub
+
+Private Sub fileOpenMenuItem_Click()
+
+loadSettings
+
+End Sub
+
+Private Sub fileSaveMenuItem_Click()
+
+saveSettings
+
+End Sub
+
+Private Sub fileSaveAsMenuItem_Click()
+
+settingsFilename = ""
+saveSettings
 
 End Sub
 
@@ -873,24 +1047,34 @@ setRunningMode
 
 End Sub
 
+Private Sub setallButton_Click()
+
+sendCurrentSettings
+
+End Sub
+
 Private Sub setButton_Click()
 
 setSettingMode
-streamSetting
+streamCurrentSetting
 
 End Sub
 
 Private Sub storeButton_Click()
 
+sema4SetForm.MousePointer = vbHourglass
 setRunningMode
 sendCommand (STORE_COMMAND)
+sema4SetForm.MousePointer = vbDefault
 
 End Sub
 
 Private Sub resetButton_Click()
 
+sema4SetForm.MousePointer = vbHourglass
 setRunningMode
 sendCommand (RESET_COMMAND)
+sema4SetForm.MousePointer = vbDefault
 
 End Sub
 
@@ -907,4 +1091,3 @@ settingValue(settingIndex) = valueScroller.Value
 valueText.Caption = settingValue(settingIndex)
 
 End Sub
-
