@@ -652,6 +652,9 @@ Private Enum OperatingMode
     setting
 End Enum
 
+' Settings file format version
+Const SETTINGS_FILE_FORMAT_VERSION As Integer = 0
+
 ' Number of setting values for Servo4
 Const SERVO4_SETTINGS As Integer = 16
 
@@ -702,7 +705,7 @@ Dim newComPortNumber As Integer
 
 ' Prompt user to select COM port connected to Servo4
 newComPortName = InputBox("Select COM Port", _
-                          "COM Port Selection", _
+                          "COM Port number", _
                           oldComPortNumber)
 
 ' Convert entered COM Port string to an integer value
@@ -726,7 +729,7 @@ End Sub
 
 Private Sub comPortFailed()
 
-MsgBox "COM Port failed, " + Error, vbOKOnly, "Error"
+MsgBox "Error accessing COM port, " + Error, vbOKOnly, "COM Port Error"
 
 changeComPort
 
@@ -827,24 +830,39 @@ sema4SetForm.MousePointer = vbDefault
 
 End Sub
 
+Private Sub checkIfSaveNeeded()
+
+If settingsChanged Then
+    If vbYes = MsgBox("Settings have changed, save before overwriting?", vbYesNo) Then
+        saveSettings
+    End If
+End If
+
+End Sub
+
 Private Sub newSettings()
 
 setRunningMode
+
+checkIfSaveNeeded
 
 For settingIndex = LBound(settingValue) To UBound(settingValue)
     settingValue(settingIndex) = DEFAULT_SETTING
 Next
 
-settingsChanged = True
 settingIndex = 0
 servoSettingOption(settingIndex).Value = True
 valueScroller.Value = settingValue(settingIndex)
+
+settingsChanged = False
 
 End Sub
 
 Private Sub loadSettings()
 
 setRunningMode
+
+checkIfSaveNeeded
 
 On Error GoTo errorCancel
 
@@ -869,6 +887,10 @@ If loadedCompatabilityText <> compatabilityText.Caption Then
     End If
 End If
 
+Dim loadedFileFormatVersion As Integer
+
+Input #1, loadedFileFormatVersion
+
 settingIndex = LBound(settingValue)
 
 Do Until (EOF(1) Or (UBound(settingValue) < settingIndex))
@@ -878,10 +900,11 @@ Loop
 
 Close #1
 
-settingsChanged = False
 settingIndex = 0
 servoSettingOption(settingIndex).Value = True
 valueScroller.Value = settingValue(settingIndex)
+
+settingsChanged = False
 
 errorCancel:
 
@@ -897,12 +920,13 @@ If "" = settingsFilename Then
 End If
 
 If "" = settingsFilename Then
-    MsgBox "Filename blank, settings not saved", vbOKOnly, "Save filename blank"
+    MsgBox "Filename blank, settings not saved", vbOKOnly, "No filename"
 End If
 
 Open settingsFilename For Output As #1
 
 Print #1, compatabilityText.Caption
+Print #1, SETTINGS_FILE_FORMAT_VERSION
 
 Dim outputIndex As Integer
 
@@ -979,7 +1003,10 @@ settingsFileDialog.FilterIndex = 1
 settingsFilename = ""
 
 selectComPort 1
+
+settingsChanged = False
 newSettings
+
 setSema4Compatabillity
 
 Show
@@ -1089,5 +1116,6 @@ Private Sub valueScroller_Change()
 
 settingValue(settingIndex) = valueScroller.Value
 valueText.Caption = settingValue(settingIndex)
+settingsChanged = True
 
 End Sub
