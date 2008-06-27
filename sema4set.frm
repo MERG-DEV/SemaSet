@@ -749,6 +749,8 @@ End If
 
 runButton.Enabled = False
 setButton.Enabled = True
+storeButton.Enabled = True
+resetButton.Enabled = True
 
 valueScroller.Enabled = False
 
@@ -763,6 +765,8 @@ optCompatServo4MenuItem.Enabled = False
 
 runButton.Enabled = True
 setButton.Enabled = False
+storeButton.Enabled = False
+resetButton.Enabled = False
 
 valueScroller.Enabled = True
 
@@ -873,6 +877,8 @@ If "" = settingsFilename Then
     GoTo errorCancel
 End If
 
+sema4SetForm.MousePointer = vbHourglass
+
 Open settingsFilename For Input As #1
 
 Dim loadedCompatabilityText As String
@@ -908,6 +914,8 @@ settingsChanged = False
 
 errorCancel:
 
+sema4SetForm.MousePointer = vbDefault
+
 End Sub
 
 Private Sub saveSettings()
@@ -922,6 +930,8 @@ End If
 If "" = settingsFilename Then
     MsgBox "Filename blank, settings not saved", vbOKOnly, "No filename"
 End If
+
+sema4SetForm.MousePointer = vbHourglass
 
 Open settingsFilename For Output As #1
 
@@ -939,6 +949,8 @@ Close #1
 settingsChanged = False
 
 errorCancel:
+
+sema4SetForm.MousePointer = vbDefault
 
 End Sub
 
@@ -1090,7 +1102,6 @@ End Sub
 Private Sub storeButton_Click()
 
 sema4SetForm.MousePointer = vbHourglass
-setRunningMode
 sendCommand (STORE_COMMAND)
 sema4SetForm.MousePointer = vbDefault
 
@@ -1099,7 +1110,6 @@ End Sub
 Private Sub resetButton_Click()
 
 sema4SetForm.MousePointer = vbHourglass
-setRunningMode
 sendCommand (RESET_COMMAND)
 sema4SetForm.MousePointer = vbDefault
 
