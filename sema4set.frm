@@ -15,7 +15,7 @@ Begin VB.Form sema4SetForm
    StartUpPosition =   3  'Windows Default
    Visible         =   0   'False
    Begin VB.CommandButton setallButton 
-      Caption         =   "Set All"
+      Caption         =   "Set &All"
       Height          =   375
       Left            =   2880
       TabIndex        =   65
@@ -358,7 +358,7 @@ Begin VB.Form sema4SetForm
       End
    End
    Begin VB.CommandButton setButton 
-      Caption         =   "Set"
+      Caption         =   "&Set"
       Height          =   375
       Left            =   2880
       TabIndex        =   5
@@ -366,7 +366,7 @@ Begin VB.Form sema4SetForm
       Width           =   975
    End
    Begin VB.CommandButton resetButton 
-      Caption         =   "Reset"
+      Caption         =   "&Reset"
       Height          =   375
       Left            =   2880
       TabIndex        =   3
@@ -383,7 +383,7 @@ Begin VB.Form sema4SetForm
       Width           =   2775
    End
    Begin VB.CommandButton storeButton 
-      Caption         =   "Store"
+      Caption         =   "S&tore"
       Height          =   375
       Left            =   2880
       TabIndex        =   1
@@ -391,7 +391,7 @@ Begin VB.Form sema4SetForm
       Width           =   975
    End
    Begin VB.CommandButton runButton 
-      Caption         =   "Run"
+      Caption         =   "&Run"
       Height          =   375
       Left            =   2880
       TabIndex        =   0
