@@ -639,6 +639,13 @@ Begin VB.Form sema4SetForm
          End
       End
    End
+   Begin VB.Menu helpMenu 
+      Caption         =   "&Help"
+      NegotiatePosition=   3  'Right
+      Begin VB.Menu helpAboutMenuItem 
+         Caption         =   "&About"
+      End
+   End
 End
 Attribute VB_Name = "sema4SetForm"
 Attribute VB_GlobalNameSpace = False
@@ -672,6 +679,7 @@ Const SYNCH_BYTE    As Integer = 0  ' ASCII null
 Const SETTING_BASE  As Integer = 65 ' ASCII A
 Const STORE_COMMAND As String = "@"
 Const RESET_COMMAND As String = "#"
+Const RUN_COMMAND   As String = "$"
 
 ' Compatability names
 Const servo4CompatabilityText As String = "Servo4"
@@ -745,6 +753,8 @@ If compatabilityText.Caption = servo4CompatabilityText Then
 Else
     optCompatSema4MenuItem.Enabled = False
     optCompatServo4MenuItem.Enabled = True
+
+    sendCommand (RUN_COMMAND)
 End If
 
 runButton.Enabled = False
@@ -829,6 +839,10 @@ For sendIndex = LBound(settingValue) To UBound(settingValue)
                     settingValue(sendIndex)
     End If
 Next
+
+If compatabilityText.Caption <> servo4CompatabilityText Then
+    sendCommand (RUN_COMMAND)
+End If
 
 sema4SetForm.MousePointer = vbDefault
 
@@ -1059,6 +1073,12 @@ End Sub
 Private Sub fileExitMenuItem_Click()
 
 End
+
+End Sub
+
+Private Sub helpAboutMenuItem_Click()
+
+   MsgBox "Sema4Setv1b 29 June 2008", vbOKOnly, "About Sema4Set"
 
 End Sub
 
