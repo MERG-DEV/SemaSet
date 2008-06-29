@@ -4,21 +4,61 @@ Object = "{F9043C88-F6F2-101A-A3C9-08002B2F49FB}#1.2#0"; "COMDLG32.OCX"
 Begin VB.Form sema4SetForm 
    BorderStyle     =   0  'None
    Caption         =   "Sem4Set"
-   ClientHeight    =   4575
+   ClientHeight    =   4785
    ClientLeft      =   150
    ClientTop       =   720
    ClientWidth     =   4095
    LinkTopic       =   "Form1"
-   ScaleHeight     =   4575
+   ScaleHeight     =   4785
    ScaleWidth      =   4095
    ShowInTaskbar   =   0   'False
    StartUpPosition =   3  'Windows Default
    Visible         =   0   'False
+   Begin VB.Frame longPulseGroup 
+      BorderStyle     =   0  'None
+      Height          =   255
+      Left            =   960
+      TabIndex        =   69
+      Top             =   4080
+      Width           =   1575
+      Begin VB.CheckBox longPulseCheck 
+         Height          =   195
+         Index           =   32
+         Left            =   480
+         TabIndex        =   73
+         Top             =   0
+         Width           =   255
+      End
+      Begin VB.CheckBox longPulseCheck 
+         Height          =   195
+         Index           =   64
+         Left            =   840
+         TabIndex        =   72
+         Top             =   0
+         Width           =   255
+      End
+      Begin VB.CheckBox longPulseCheck 
+         Height          =   195
+         Index           =   128
+         Left            =   1200
+         TabIndex        =   71
+         Top             =   0
+         Width           =   255
+      End
+      Begin VB.CheckBox longPulseCheck 
+         Height          =   195
+         Index           =   16
+         Left            =   120
+         TabIndex        =   70
+         Top             =   0
+         Width           =   255
+      End
+   End
    Begin VB.CommandButton setallButton 
       Caption         =   "Set &All"
       Height          =   375
       Left            =   2880
-      TabIndex        =   65
+      TabIndex        =   64
       Top             =   1560
       Width           =   975
    End
@@ -379,7 +419,7 @@ Begin VB.Form sema4SetForm
       Left            =   1200
       Max             =   255
       TabIndex        =   2
-      Top             =   4200
+      Top             =   4440
       Width           =   2775
    End
    Begin VB.CommandButton storeButton 
@@ -408,13 +448,31 @@ Begin VB.Form sema4SetForm
       InBufferSize    =   128
       OutBufferSize   =   128
    End
+   Begin VB.Label longPulseLabel 
+      AutoSize        =   -1  'True
+      Caption         =   "180 degrees"
+      Height          =   195
+      Left            =   60
+      TabIndex        =   68
+      Top             =   4080
+      Width           =   885
+   End
+   Begin VB.Label onBounce3Label 
+      AutoSize        =   -1  'True
+      Caption         =   "On Bounce 3"
+      Height          =   195
+      Left            =   0
+      TabIndex        =   67
+      Top             =   3720
+      Width           =   945
+   End
    Begin VB.Label connectionText 
       Alignment       =   1  'Right Justify
       BackColor       =   &H8000000E&
       Caption         =   "Com1"
       Height          =   255
       Left            =   3360
-      TabIndex        =   67
+      TabIndex        =   66
       Top             =   1200
       Width           =   495
    End
@@ -424,7 +482,7 @@ Begin VB.Form sema4SetForm
       Caption         =   "Connection:"
       Height          =   195
       Left            =   3000
-      TabIndex        =   66
+      TabIndex        =   65
       Top             =   960
       Width           =   855
    End
@@ -434,7 +492,7 @@ Begin VB.Form sema4SetForm
       Caption         =   "Compatability:"
       Height          =   195
       Left            =   2880
-      TabIndex        =   64
+      TabIndex        =   63
       Top             =   360
       Width           =   975
    End
@@ -444,7 +502,7 @@ Begin VB.Form sema4SetForm
       Caption         =   "Sema4"
       Height          =   255
       Left            =   3360
-      TabIndex        =   63
+      TabIndex        =   62
       Top             =   600
       Width           =   495
    End
@@ -453,7 +511,7 @@ Begin VB.Form sema4SetForm
       Caption         =   "4"
       Height          =   195
       Left            =   2190
-      TabIndex        =   62
+      TabIndex        =   61
       Top             =   120
       Width           =   285
    End
@@ -462,18 +520,9 @@ Begin VB.Form sema4SetForm
       Caption         =   "1"
       Height          =   195
       Left            =   1110
-      TabIndex        =   61
+      TabIndex        =   60
       Top             =   120
       Width           =   285
-   End
-   Begin VB.Label onBounce3Label 
-      AutoSize        =   -1  'True
-      Caption         =   "On Bounce 3"
-      Height          =   195
-      Left            =   0
-      TabIndex        =   60
-      Top             =   3720
-      Width           =   945
    End
    Begin VB.Label onBounce2Label 
       AutoSize        =   -1  'True
@@ -590,7 +639,7 @@ Begin VB.Form sema4SetForm
       Height          =   255
       Left            =   720
       TabIndex        =   6
-      Top             =   4200
+      Top             =   4440
       Width           =   375
    End
    Begin VB.Label valueLabel 
@@ -599,7 +648,7 @@ Begin VB.Form sema4SetForm
       Height          =   195
       Left            =   120
       TabIndex        =   4
-      Top             =   4200
+      Top             =   4440
       Width           =   450
    End
    Begin VB.Menu fileMenu 
@@ -660,7 +709,7 @@ Private Enum OperatingMode
 End Enum
 
 ' Settings file format version
-Const SETTINGS_FILE_FORMAT_VERSION As Integer = 0
+Const SETTINGS_FILE_FORMAT_VERSION As Integer = 1
 
 ' Number of setting values for Servo4
 Const SERVO4_SETTINGS As Integer = 16
@@ -675,11 +724,12 @@ Const SEND_ITTERATIONS As Integer = 20
 Const DEFAULT_SETTING As Integer = 127
 
 ' Transmitted command characters
-Const SYNCH_BYTE    As Integer = 0  ' ASCII null
-Const SETTING_BASE  As Integer = 65 ' ASCII A
-Const STORE_COMMAND As String = "@"
-Const RESET_COMMAND As String = "#"
-Const RUN_COMMAND   As String = "$"
+Const SYNCH_BYTE     As Integer = 0  ' ASCII null
+Const SETTING_BASE   As Integer = 65 ' ASCII A
+Const STORE_COMMAND  As String = "@"
+Const RESET_COMMAND  As String = "#"
+Const RUN_COMMAND    As String = "$"
+Const EXTEND_COMMAND As String = "!"
 
 ' Compatability names
 Const servo4CompatabilityText As String = "Servo4"
@@ -687,6 +737,8 @@ Const sema4CompatabilityText  As String = "Sema4"
 
 Dim settingValue(0 To (SEMA4_SETTINGS - 1))  As Integer
 Dim settingLookup(0 To (SEMA4_SETTINGS - 1)) As Integer
+
+Dim longPulseFlags As Integer
 
 Dim settingIndex    As Integer
 Dim settingsChanged As Boolean
@@ -725,7 +777,7 @@ End If
 
 connectionText.Caption = "Com" + newComPortName
 
-openComPort (newComPortNumber)
+openComPort newComPortNumber
 
 End Sub
 
@@ -754,8 +806,10 @@ Else
     optCompatSema4MenuItem.Enabled = False
     optCompatServo4MenuItem.Enabled = True
 
-    sendCommand (RUN_COMMAND)
+    sendCommand RUN_COMMAND
 End If
+
+longPulseGroup.Enabled = True
 
 runButton.Enabled = False
 setButton.Enabled = True
@@ -773,12 +827,30 @@ currentMode = setting
 optCompatSema4MenuItem.Enabled = False
 optCompatServo4MenuItem.Enabled = False
 
+longPulseGroup.Enabled = False
+
 runButton.Enabled = True
 setButton.Enabled = False
 storeButton.Enabled = False
 resetButton.Enabled = False
 
 valueScroller.Enabled = True
+
+End Sub
+
+Private Sub setLongPulse(Index As Integer)
+
+longPulseFlags = longPulseFlags Or Index
+
+sendCommand EXTEND_COMMAND, longPulseFlags
+
+End Sub
+
+Private Sub clearLongPulse(Index As Integer)
+
+longPulseFlags = longPulseFlags And Not Index
+
+sendCommand EXTEND_COMMAND, longPulseFlags
 
 End Sub
 
@@ -840,8 +912,10 @@ For sendIndex = LBound(settingValue) To UBound(settingValue)
     End If
 Next
 
+sendCommand EXTEND_COMMAND, longPulseFlags
+
 If compatabilityText.Caption <> servo4CompatabilityText Then
-    sendCommand (RUN_COMMAND)
+    sendCommand RUN_COMMAND
 End If
 
 sema4SetForm.MousePointer = vbDefault
@@ -873,6 +947,10 @@ servoSettingOption(settingIndex).Value = True
 valueScroller.Value = settingValue(settingIndex)
 
 settingsChanged = False
+
+longPulseFlags = 0
+
+setLongPulseChecks
 
 End Sub
 
@@ -918,11 +996,19 @@ Do Until (EOF(1) Or (UBound(settingValue) < settingIndex))
     settingIndex = 1 + settingIndex
 Loop
 
+longPulseFlags = 0
+
+If 0 < loadedFileFormatVersion Then
+    Input #1, longPulseFlags
+End If
+
 Close #1
 
 settingIndex = 0
 servoSettingOption(settingIndex).Value = True
 valueScroller.Value = settingValue(settingIndex)
+
+setLongPulseChecks
 
 settingsChanged = False
 
@@ -958,6 +1044,8 @@ For outputIndex = LBound(settingValue) To UBound(settingValue)
     Print #1, settingValue(outputIndex)
 Next
 
+Print #1, longPulseFlags
+
 Close #1
 
 settingsChanged = False
@@ -988,6 +1076,15 @@ For settingIndex = SERVO4_SETTINGS To (SEMA4_SETTINGS - 1)
     servoSettingOption(settingIndex).Enabled = True
 Next
 
+longPulseCheck(16).Visible = True
+longPulseCheck(16).Enabled = True
+longPulseCheck(32).Visible = True
+longPulseCheck(32).Enabled = True
+longPulseCheck(64).Visible = True
+longPulseCheck(64).Enabled = True
+longPulseCheck(128).Visible = True
+longPulseCheck(128).Enabled = True
+
 settingIndex = 0
 servoSettingOption(settingIndex).Value = True
 valueScroller.Value = settingValue(settingIndex)
@@ -1009,6 +1106,15 @@ For settingIndex = SERVO4_SETTINGS To (SEMA4_SETTINGS - 1)
     servoSettingOption(settingIndex).Enabled = False
 Next
 
+longPulseCheck(16).Visible = False
+longPulseCheck(16).Enabled = False
+longPulseCheck(32).Visible = False
+longPulseCheck(32).Enabled = False
+longPulseCheck(64).Visible = False
+longPulseCheck(64).Enabled = False
+longPulseCheck(128).Visible = False
+longPulseCheck(128).Enabled = False
+
 settingIndex = 0
 servoSettingOption(settingIndex).Value = True
 valueScroller.Value = settingValue(settingIndex)
@@ -1016,6 +1122,34 @@ valueScroller.Value = settingValue(settingIndex)
 compatabilityText.Caption = servo4CompatabilityText
 optCompatSema4MenuItem.Enabled = True
 optCompatServo4MenuItem.Enabled = False
+
+End Sub
+
+Private Sub setLongPulseChecks()
+
+If (0 < (longPulseFlags And 16)) Then
+    longPulseCheck(16).Value = vbChecked
+Else
+    longPulseCheck(16).Value = vbUnchecked
+End If
+
+If (0 < (longPulseFlags And 32)) Then
+    longPulseCheck(32).Value = vbChecked
+Else
+    longPulseCheck(32).Value = vbUnchecked
+End If
+
+If (0 < (longPulseFlags And 64)) Then
+    longPulseCheck(64).Value = vbChecked
+Else
+    longPulseCheck(64).Value = vbUnchecked
+End If
+
+If (0 < (longPulseFlags And 128)) Then
+    longPulseCheck(128).Value = vbChecked
+Else
+    longPulseCheck(128).Value = vbUnchecked
+End If
 
 End Sub
 
@@ -1079,6 +1213,16 @@ End Sub
 Private Sub helpAboutMenuItem_Click()
 
    MsgBox "Sema4Setv1b 29 June 2008", vbOKOnly, "About Sema4Set"
+
+End Sub
+
+Private Sub longPulseCheck_Click(Index As Integer)
+
+If vbChecked = longPulseCheck(Index).Value Then
+    setLongPulse Index
+Else
+    clearLongPulse Index
+End If
 
 End Sub
 
