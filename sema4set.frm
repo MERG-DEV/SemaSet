@@ -637,6 +637,9 @@ Begin VB.Form sema4SetForm
          Begin VB.Menu optCompatSema4MenuItem 
             Caption         =   "Se&ma4"
          End
+         Begin VB.Menu optCompatSema1MenuItem 
+            Caption         =   "Se&ma1"
+         End
       End
    End
    Begin VB.Menu helpMenu 
@@ -662,11 +665,20 @@ End Enum
 ' Settings file format version
 Const SETTINGS_FILE_FORMAT_VERSION As Integer = 0
 
+' Number of setting values for Servo1
+Const SERVO1_SETTINGS As Integer = 4
+
 ' Number of setting values for Servo4
-Const SERVO4_SETTINGS As Integer = 16
+Const SERVO4_SETTINGS As Integer = 4 * SERVO1_SETTINGS
+
+' Number of extra setting values for Sema
+Const SEMA_SETTINGS  As Integer = 6
+
+' Number of setting values for Sema1
+Const SEMA1_SETTINGS  As Integer = SEMA_SETTINGS + SERVO1_SETTINGS
 
 ' Number of setting values for Sema4
-Const SEMA4_SETTINGS  As Integer = 40
+Const SEMA4_SETTINGS  As Integer = 4 * SEMA1_SETTINGS
 
 ' Number of times to send a non streaming command or setting string
 Const SEND_ITTERATIONS As Integer = 20
@@ -684,6 +696,7 @@ Const RUN_COMMAND   As String = "$"
 ' Compatability names
 Const servo4CompatabilityText As String = "Servo4"
 Const sema4CompatabilityText  As String = "Sema4"
+Const sema1CompatabilityText  As String = "Sema1"
 
 Dim settingValue(0 To (SEMA4_SETTINGS - 1))  As Integer
 Dim settingLookup(0 To (SEMA4_SETTINGS - 1)) As Integer
@@ -748,11 +761,19 @@ Private Sub setRunningMode()
 currentMode = running
 
 If compatabilityText.Caption = servo4CompatabilityText Then
-    optCompatSema4MenuItem.Enabled = True
     optCompatServo4MenuItem.Enabled = False
-Else
-    optCompatSema4MenuItem.Enabled = False
+    optCompatSema4MenuItem.Enabled = True
+    optCompatSema1MenuItem.Enabled = True
+ElseIf compatabilityText.Caption = sema1CompatabilityText Then
     optCompatServo4MenuItem.Enabled = True
+    optCompatSema4MenuItem.Enabled = True
+    optCompatSema1MenuItem.Enabled = False
+
+    sendCommand (RUN_COMMAND)
+Else
+    optCompatServo4MenuItem.Enabled = True
+    optCompatSema4MenuItem.Enabled = False
+    optCompatSema1MenuItem.Enabled = False
 
     sendCommand (RUN_COMMAND)
 End If
@@ -770,8 +791,9 @@ Private Sub setSettingMode()
 
 currentMode = setting
 
-optCompatSema4MenuItem.Enabled = False
 optCompatServo4MenuItem.Enabled = False
+optCompatSema4MenuItem.Enabled = False
+optCompatSema1MenuItem.Enabled = False
 
 runButton.Enabled = True
 setButton.Enabled = False
@@ -902,8 +924,10 @@ Input #1, loadedCompatabilityText
 If loadedCompatabilityText <> compatabilityText.Caption Then
     If loadedCompatabilityText = servo4CompatabilityText Then
         setServo4Compatabillity
-    Else
+    ElseIf loadedCompatabilityText = sema4CompatabilityText Then
         setSema4Compatabillity
+    End If
+        setSema1Compatabillity
     End If
 End If
 
@@ -968,6 +992,33 @@ sema4SetForm.MousePointer = vbDefault
 
 End Sub
 
+Private Sub setServo4Compatabillity()
+
+For settingIndex = LBound(settingLookup) To UBound(settingLookup)
+    settingLookup(settingIndex) = settingIndex
+Next
+
+For settingIndex = 0 To (SERVO4_SETTINGS - 1)
+    servoSettingOption(settingIndex).Visible = True
+    servoSettingOption(settingIndex).Enabled = True
+Next
+
+For settingIndex = SERVO4_SETTINGS To (SEMA4_SETTINGS - 1)
+    servoSettingOption(settingIndex).Visible = False
+    servoSettingOption(settingIndex).Enabled = False
+Next
+
+settingIndex = 0
+servoSettingOption(settingIndex).Value = True
+valueScroller.Value = settingValue(settingIndex)
+
+compatabilityText.Caption = servo4CompatabilityText
+optCompatSema4MenuItem.Enabled = True
+optCompatSema1MenuItem.Enabled = True
+optCompatServo4MenuItem.Enabled = False
+
+End Sub
+
 Private Sub setSema4Compatabillity()
 
 For settingIndex = LBound(settingLookup) To UBound(settingLookup)
@@ -983,7 +1034,7 @@ settingLookup(9) = 45
 settingLookup(12) = 46
 settingLookup(13) = 47
 
-For settingIndex = SERVO4_SETTINGS To (SEMA4_SETTINGS - 1)
+For settingIndex = 0 To (SEMA4_SETTINGS - 1)
     servoSettingOption(settingIndex).Visible = True
     servoSettingOption(settingIndex).Enabled = True
 Next
@@ -994,28 +1045,34 @@ valueScroller.Value = settingValue(settingIndex)
 
 compatabilityText.Caption = sema4CompatabilityText
 optCompatSema4MenuItem.Enabled = False
+optCompatSema1MenuItem.Enabled = True
 optCompatServo4MenuItem.Enabled = True
 
 End Sub
 
-Private Sub setServo4Compatabillity()
+Private Sub setSema1Compatabillity()
 
-For settingIndex = LBound(settingLookup) To UBound(settingLookup)
-    settingLookup(settingIndex) = settingIndex
-Next
+setSema4Compatabillity
 
-For settingIndex = SERVO4_SETTINGS To (SEMA4_SETTINGS - 1)
+For settingIndex = 0 To (SEMA4_SETTINGS - 1)
     servoSettingOption(settingIndex).Visible = False
     servoSettingOption(settingIndex).Enabled = False
 Next
 
-settingIndex = 0
-servoSettingOption(settingIndex).Value = True
-valueScroller.Value = settingValue(settingIndex)
+For settingIndex = 0 To (SERVO1_SETTINGS - 1)
+    servoSettingOption(settingIndex).Visible = True
+    servoSettingOption(settingIndex).Enabled = True
+Next
 
-compatabilityText.Caption = servo4CompatabilityText
+For settingIndex = SERVO4_SETTINGS To (SERVO4_SETTINGS + SEMA_SETTINGS - 1)
+    servoSettingOption(settingIndex).Visible = True
+    servoSettingOption(settingIndex).Enabled = True
+Next
+
+compatabilityText.Caption = sema1CompatabilityText
 optCompatSema4MenuItem.Enabled = True
-optCompatServo4MenuItem.Enabled = False
+optCompatSema1MenuItem.Enabled = False
+optCompatServo4MenuItem.Enabled = True
 
 End Sub
 
@@ -1078,7 +1135,7 @@ End Sub
 
 Private Sub helpAboutMenuItem_Click()
 
-   MsgBox "Sema4Setv1b 29 June 2008", vbOKOnly, "About Sema4Set"
+   MsgBox "Sema4Setv1c 8 February 2009", vbOKOnly, "About Sema4Set"
 
 End Sub
 
@@ -1097,6 +1154,12 @@ End Sub
 Private Sub optCompatSema4MenuItem_Click()
 
 setSema4Compatabillity
+
+End Sub
+
+Private Sub optCompatSema1MenuItem_Click()
+
+setSema1Compatabillity
 
 End Sub
 
