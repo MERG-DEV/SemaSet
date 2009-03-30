@@ -658,8 +658,8 @@ Attribute VB_Exposed = False
 Option Explicit
 
 Private Enum OperatingMode
-    running
-    setting
+    RUNNING
+    SETTING
 End Enum
 
 ' Settings file format version
@@ -698,22 +698,24 @@ Const servo4CompatabilityText As String = "Servo4"
 Const sema4CompatabilityText  As String = "Sema4"
 Const sema1CompatabilityText  As String = "Sema1"
 
-Dim settingValue(0 To (SEMA4_SETTINGS - 1))  As Integer
-Dim settingLookup(0 To (SEMA4_SETTINGS - 1)) As Integer
+Dim settingValue(0 To (SEMA4_SETTINGS - 1))   As Integer
+Dim settingCommand(0 To (SEMA4_SETTINGS - 1)) As Integer
 
 Dim settingIndex    As Integer
 Dim settingsChanged As Boolean
 
 Dim settingsFilename As String
 
-Dim currentMode     As OperatingMode
+Dim currentMode As OperatingMode
 
 Private Sub openComPort(newComPortNumber As Integer)
 
+' If COM port currently open close it
 If True = comPort.PortOpen Then
     comPort.PortOpen = False
 End If
 
+' Set new COM port number and open COM port
 comPort.CommPort = newComPortNumber
 comPort.PortOpen = True
 
@@ -724,7 +726,7 @@ Public Sub selectComPort(oldComPortNumber As Integer)
 Dim newComPortName As String
 Dim newComPortNumber As Integer
 
-' Prompt user to select COM port connected to Servo4
+' Prompt user to select COM port for connection
 newComPortName = InputBox("Select COM Port", _
                           "COM Port number", _
                           oldComPortNumber)
@@ -732,12 +734,13 @@ newComPortName = InputBox("Select COM Port", _
 ' Convert entered COM Port string to an integer value
 newComPortNumber = Val(newComPortName)
 
+' Ensure COM port number is greater than 0
 If (1 > newComPortNumber) Then
     End
 End If
 
+' Update current COM port display and open new COM port
 connectionText.Caption = "Com" + newComPortName
-
 openComPort (newComPortNumber)
 
 End Sub
@@ -758,8 +761,9 @@ End Sub
 
 Private Sub setRunningMode()
 
-currentMode = running
+currentMode = RUNNING
 
+' Allow change of compatability selection, excluding that currently selected
 If compatabilityText.Caption = servo4CompatabilityText Then
     optCompatServo4MenuItem.Enabled = False
     optCompatSema4MenuItem.Enabled = True
@@ -779,42 +783,52 @@ Else
 End If
 
 runButton.Enabled = False
+
+' Allow sending of commands to Set, Store, and Reset settings
 setButton.Enabled = True
 storeButton.Enabled = True
 resetButton.Enabled = True
 
+' Prevent changing of setting values
 valueScroller.Enabled = False
 
 End Sub
 
 Private Sub setSettingMode()
 
-currentMode = setting
+currentMode = SETTING
 
+'Prevent change of compatability selection
 optCompatServo4MenuItem.Enabled = False
 optCompatSema4MenuItem.Enabled = False
 optCompatSema1MenuItem.Enabled = False
 
 runButton.Enabled = True
+
+' Prevent sending of commands to Set, Store, and Reset settings
 setButton.Enabled = False
 storeButton.Enabled = False
 resetButton.Enabled = False
 
+' Allow changing of setting values
 valueScroller.Enabled = True
 
 End Sub
 
 Private Sub streamCurrentSetting()
+' Continuosly send the currently selected setting and value so that the value
+' can be changed interactively
 
 On Error GoTo comPortFailure
 
-While (setting = currentMode)
-    ' Perform event dispatch to keep GUI alive, allows currentMode to be changed
+While (SETTING = currentMode)
+    ' Perform event dispatch to keep GUI alive,
+    ' allows currentMode to be changed
     DoEvents
 
     ' Send setting message for currently selected setting and value
     comPort.Output = Chr(SYNCH_BYTE) _
-                     + Chr(SETTING_BASE + settingLookup(settingIndex)) _
+                     + Chr(SETTING_BASE + settingCommand(settingIndex)) _
                      + Format(settingValue(settingIndex), "000")
 Wend
 
@@ -827,13 +841,16 @@ End Sub
 
 Private Sub sendCommand(commandCharacter As String, _
                         Optional commandValue As Integer = 0)
+' Send the given command, and optionally a value for the command, repeatedly
+' a set number of times to allow for garbled reception as link has no handshake
 
 On Error GoTo comPortFailure
 
 Dim n As Integer
 
 For n = 1 To SEND_ITTERATIONS
-    ' Perform event dispatch to keep GUI alive, allows currentMode to be changed
+    ' Perform event dispatch to keep GUI alive,
+    ' allows currentMode to be changed
     DoEvents
 
     ' Send command message
@@ -850,6 +867,7 @@ comPortFailure:
 End Sub
 
 Private Sub sendCurrentSettings()
+' Download all the current settings
 
 sema4SetForm.MousePointer = vbHourglass
 
@@ -857,7 +875,7 @@ Dim sendIndex As Integer
 
 For sendIndex = LBound(settingValue) To UBound(settingValue)
     If servoSettingOption(sendIndex).Enabled Then
-        sendCommand Chr(SETTING_BASE + settingLookup(sendIndex)), _
+        sendCommand Chr(SETTING_BASE + settingCommand(sendIndex)), _
                     settingValue(sendIndex)
     End If
 Next
@@ -871,9 +889,12 @@ sema4SetForm.MousePointer = vbDefault
 End Sub
 
 Private Sub checkIfSaveNeeded()
+' Check if any settings have been changed and if so offer a chance to save
+' these before proceeding
 
 If settingsChanged Then
-    If vbYes = MsgBox("Settings have changed, save before overwriting?", vbYesNo) Then
+    If vbYes = MsgBox("Settings have changed, save before overwriting?", _
+                      vbYesNo) Then
         saveSettings
     End If
 End If
@@ -881,6 +902,8 @@ End If
 End Sub
 
 Private Sub newSettings()
+' After checking if current settings need saving change all settings to
+' default values
 
 setRunningMode
 
@@ -890,6 +913,7 @@ For settingIndex = LBound(settingValue) To UBound(settingValue)
     settingValue(settingIndex) = DEFAULT_SETTING
 Next
 
+' Select first setting option control and display corresponding value
 settingIndex = 0
 servoSettingOption(settingIndex).Value = True
 valueScroller.Value = settingValue(settingIndex)
@@ -899,6 +923,7 @@ settingsChanged = False
 End Sub
 
 Private Sub loadSettings()
+' After checking if current settings need saving load all settings from file
 
 setRunningMode
 
@@ -906,6 +931,7 @@ checkIfSaveNeeded
 
 On Error GoTo errorCancel
 
+' Get name of file to load settings from
 settingsFileDialog.ShowOpen
 settingsFilename = settingsFileDialog.FileName
 
@@ -915,8 +941,10 @@ End If
 
 sema4SetForm.MousePointer = vbHourglass
 
+' Open the settings file
 Open settingsFilename For Input As #1
 
+' Load compatability mode from file and set to same
 Dim loadedCompatabilityText As String
 
 Input #1, loadedCompatabilityText
@@ -926,15 +954,18 @@ If loadedCompatabilityText <> compatabilityText.Caption Then
         setServo4Compatabillity
     ElseIf loadedCompatabilityText = sema4CompatabilityText Then
         setSema4Compatabillity
-    End If
+    Else
         setSema1Compatabillity
     End If
 End If
 
+' Check version of format for settings in file in order to support reading
+' files written with previous versions of this program, do nothing at present
 Dim loadedFileFormatVersion As Integer
 
 Input #1, loadedFileFormatVersion
 
+' Load the setting values from file
 settingIndex = LBound(settingValue)
 
 Do Until (EOF(1) Or (UBound(settingValue) < settingIndex))
@@ -942,8 +973,10 @@ Do Until (EOF(1) Or (UBound(settingValue) < settingIndex))
     settingIndex = 1 + settingIndex
 Loop
 
+' Close the settings file
 Close #1
 
+' Select first setting option control and display corresponding value
 settingIndex = 0
 servoSettingOption(settingIndex).Value = True
 valueScroller.Value = settingValue(settingIndex)
@@ -957,9 +990,11 @@ sema4SetForm.MousePointer = vbDefault
 End Sub
 
 Private Sub saveSettings()
+' Save the current setting values to file
 
 On Error GoTo errorCancel
 
+' Get name of file to save settings to
 If "" = settingsFilename Then
     settingsFileDialog.ShowSave
     settingsFilename = settingsFileDialog.FileName
@@ -971,17 +1006,21 @@ End If
 
 sema4SetForm.MousePointer = vbHourglass
 
+' Open the settings file
 Open settingsFilename For Output As #1
 
+' Save current compatability mode and version of format for settings in file
 Print #1, compatabilityText.Caption
 Print #1, SETTINGS_FILE_FORMAT_VERSION
 
+' Save the setting values to file
 Dim outputIndex As Integer
 
 For outputIndex = LBound(settingValue) To UBound(settingValue)
     Print #1, settingValue(outputIndex)
 Next
 
+' Close the settings file
 Close #1
 
 settingsChanged = False
@@ -994,25 +1033,32 @@ End Sub
 
 Private Sub setServo4Compatabillity()
 
-For settingIndex = LBound(settingLookup) To UBound(settingLookup)
-    settingLookup(settingIndex) = settingIndex
+' Initialise command values for each setting
+For settingIndex = LBound(settingCommand) To UBound(settingCommand)
+    settingCommand(settingIndex) = settingIndex
 Next
 
+' Enable the option controls to select setting for all settings
 For settingIndex = 0 To (SERVO4_SETTINGS - 1)
     servoSettingOption(settingIndex).Visible = True
     servoSettingOption(settingIndex).Enabled = True
 Next
 
+' Disable the option controls for settings not supported by Servo4
 For settingIndex = SERVO4_SETTINGS To (SEMA4_SETTINGS - 1)
     servoSettingOption(settingIndex).Visible = False
     servoSettingOption(settingIndex).Enabled = False
 Next
 
+' Select first setting option control and display corresponding value
 settingIndex = 0
 servoSettingOption(settingIndex).Value = True
 valueScroller.Value = settingValue(settingIndex)
 
+' Update compatability mode display
 compatabilityText.Caption = servo4CompatabilityText
+
+' Allow change of compatability selection, excluding Servo4
 optCompatSema4MenuItem.Enabled = True
 optCompatSema1MenuItem.Enabled = True
 optCompatServo4MenuItem.Enabled = False
@@ -1021,29 +1067,36 @@ End Sub
 
 Private Sub setSema4Compatabillity()
 
-For settingIndex = LBound(settingLookup) To UBound(settingLookup)
-    settingLookup(settingIndex) = settingIndex
+' Initialise command values for each setting
+For settingIndex = LBound(settingCommand) To UBound(settingCommand)
+    settingCommand(settingIndex) = settingIndex
 Next
 
-settingLookup(0) = 40
-settingLookup(1) = 41
-settingLookup(4) = 42
-settingLookup(5) = 43
-settingLookup(8) = 44
-settingLookup(9) = 45
-settingLookup(12) = 46
-settingLookup(13) = 47
+' Sema4 has alternative commands for equivalent Servo4 settings
+settingCommand(0) = 40
+settingCommand(1) = 41
+settingCommand(4) = 42
+settingCommand(5) = 43
+settingCommand(8) = 44
+settingCommand(9) = 45
+settingCommand(12) = 46
+settingCommand(13) = 47
 
+' Enable the option controls to select setting for all settings
 For settingIndex = 0 To (SEMA4_SETTINGS - 1)
     servoSettingOption(settingIndex).Visible = True
     servoSettingOption(settingIndex).Enabled = True
 Next
 
+' Select first setting option control and display corresponding value
 settingIndex = 0
 servoSettingOption(settingIndex).Value = True
 valueScroller.Value = settingValue(settingIndex)
 
+' Update compatability mode display
 compatabilityText.Caption = sema4CompatabilityText
+
+' Allow change of compatability selection, excluding Sema4
 optCompatSema4MenuItem.Enabled = False
 optCompatSema1MenuItem.Enabled = True
 optCompatServo4MenuItem.Enabled = True
@@ -1052,24 +1105,29 @@ End Sub
 
 Private Sub setSema1Compatabillity()
 
+' Sema1 is a subset of Sema4
 setSema4Compatabillity
 
+' Disable the option controls to select setting for all settings
 For settingIndex = 0 To (SEMA4_SETTINGS - 1)
     servoSettingOption(settingIndex).Visible = False
     servoSettingOption(settingIndex).Enabled = False
 Next
 
+' Enable the option controls for settings supported by Sema1, two batches
 For settingIndex = 0 To (SERVO1_SETTINGS - 1)
     servoSettingOption(settingIndex).Visible = True
     servoSettingOption(settingIndex).Enabled = True
 Next
-
 For settingIndex = SERVO4_SETTINGS To (SERVO4_SETTINGS + SEMA_SETTINGS - 1)
     servoSettingOption(settingIndex).Visible = True
     servoSettingOption(settingIndex).Enabled = True
 Next
 
+' Update compatability mode display
 compatabilityText.Caption = sema1CompatabilityText
+
+' Allow change of compatability selection, excluding Servo4
 optCompatSema4MenuItem.Enabled = True
 optCompatSema1MenuItem.Enabled = False
 optCompatServo4MenuItem.Enabled = True
@@ -1077,6 +1135,8 @@ optCompatServo4MenuItem.Enabled = True
 End Sub
 
 Private Sub Form_Load()
+
+' Initialisation when form is first loaded
 
 settingsFileDialog.Filter = "Sema4Set Files (*.sm4)|*.sm4" _
                             + "|Text Files (*.txt)|*.txt" _
@@ -1171,12 +1231,14 @@ End Sub
 
 Private Sub setallButton_Click()
 
+' Download all current setting values
 sendCurrentSettings
 
 End Sub
 
 Private Sub setButton_Click()
 
+' Change setting values interactively
 setSettingMode
 streamCurrentSetting
 
@@ -1184,6 +1246,7 @@ End Sub
 
 Private Sub storeButton_Click()
 
+' Command module to store setting values into non-volatile memory
 sema4SetForm.MousePointer = vbHourglass
 sendCommand (STORE_COMMAND)
 sema4SetForm.MousePointer = vbDefault
@@ -1192,6 +1255,7 @@ End Sub
 
 Private Sub resetButton_Click()
 
+' Command module to reset setting values to defaults
 sema4SetForm.MousePointer = vbHourglass
 sendCommand (RESET_COMMAND)
 sema4SetForm.MousePointer = vbDefault
@@ -1200,6 +1264,7 @@ End Sub
 
 Private Sub servoSettingOption_Click(Index As Integer)
 
+' Select setting to display or change
 settingIndex = Index
 valueScroller.Value = settingValue(settingIndex)
 
@@ -1207,6 +1272,7 @@ End Sub
 
 Private Sub valueScroller_Change()
 
+' Change setting value
 settingValue(settingIndex) = valueScroller.Value
 valueText.Caption = settingValue(settingIndex)
 settingsChanged = True
