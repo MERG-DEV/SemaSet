@@ -966,9 +966,10 @@ For settingIndex = LBound(settingValue) To UBound(settingValue)
 Next
 
 settingIndex = 0
-servoSettingOption(settingIndex).Value = True
+valueScroller.Max = 255
 valueScroller.Value = settingValue(settingIndex)
 valuetext.Text = settingValue(settingIndex)
+servoSettingOption(settingIndex).Value = True
 
 settingsChanged = False
 
@@ -1019,6 +1020,7 @@ Loop
 Close #1
 
 settingIndex = 0
+valueScroller.Max = 255
 valueScroller.Value = settingValue(settingIndex)
 valuetext.Text = settingValue(settingIndex)
 servoSettingOption(settingIndex).Value = True
@@ -1088,6 +1090,7 @@ For settingIndex = SERVO4_SETTINGS To (SEMA4_SETTINGS - 1)
 Next
 
 settingIndex = 0
+valueScroller.Max = 255
 valueScroller.Value = settingValue(settingIndex)
 valuetext.Text = settingValue(settingIndex)
 servoSettingOption(settingIndex).Value = True
@@ -1110,6 +1113,7 @@ For settingIndex = SERVO4_SETTINGS To (SEMA4_SETTINGS - 1)
 Next
 
 settingIndex = 0
+valueScroller.Max = 255
 valueScroller.Value = settingValue(settingIndex)
 valuetext.Text = settingValue(settingIndex)
 servoSettingOption(settingIndex).Value = True
@@ -1123,14 +1127,14 @@ End Sub
 
 Private Sub changeSettingValue(newValue As Integer)
 
-If newValue <> settingValue(settingIndex) Then
-    If newValue > valueScroller.Max Then
-        newValue = valueScroller.Max
-    End If
-    If newValue < valueScroller.Min Then
-        newValue = valueScroller.Min
-    End If
+If newValue > valueScroller.Max Then
+    newValue = valueScroller.Max
+End If
+If newValue < valueScroller.Min Then
+    newValue = valueScroller.Min
+End If
 
+If newValue <> settingValue(settingIndex) Then
     settingValue(settingIndex) = newValue
     valueScroller.Value = newValue
     valuetext.Text = newValue
@@ -1150,8 +1154,8 @@ settingsFilename = ""
 
 setServo4Compatabillity
 
-settingsChanged = False
 newSettings
+settingsChanged = False
 
 selectComPort 1
 
@@ -1210,12 +1214,14 @@ End Sub
 Private Sub optCompatServo4MenuItem_Click()
 
 setServo4Compatabillity
+settingsChanged = True
 
 End Sub
 
 Private Sub optCompatSema4MenuItem_Click()
 
 setSema4Compatabillity
+settingsChanged = True
 
 End Sub
 
@@ -1277,6 +1283,7 @@ Case 2, 3, 6, 7, 10, 11, 14, 15
 
 End Select
     
+changeSettingValue settingValue(settingIndex)
 valueScroller.Value = settingValue(settingIndex)
 valuetext.Text = settingValue(settingIndex)
 
