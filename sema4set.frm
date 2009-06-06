@@ -3,27 +3,44 @@ Object = "{648A5603-2C6E-101B-82B6-000000000014}#1.1#0"; "MSCOMM32.OCX"
 Object = "{F9043C88-F6F2-101A-A3C9-08002B2F49FB}#1.2#0"; "COMDLG32.OCX"
 Begin VB.Form sema4SetForm 
    BorderStyle     =   0  'None
-   Caption         =   "Sem4Set"
+   Caption         =   "Servo4Sem4Set"
    ClientHeight    =   4575
-   ClientLeft      =   150
-   ClientTop       =   720
-   ClientWidth     =   4095
+   ClientLeft      =   105
+   ClientTop       =   105
+   ClientWidth     =   4245
+   Icon            =   "sema4set.frx":0000
    LinkTopic       =   "Form1"
+   MaxButton       =   0   'False
    ScaleHeight     =   4575
-   ScaleWidth      =   4095
-   ShowInTaskbar   =   0   'False
-   StartUpPosition =   3  'Windows Default
+   ScaleWidth      =   4245
+   StartUpPosition =   2  'CenterScreen
    Visible         =   0   'False
+   Begin VB.TextBox valuetext 
+      Height          =   285
+      Left            =   720
+      MaxLength       =   3
+      TabIndex        =   68
+      Top             =   4200
+      Width           =   495
+   End
+   Begin VB.CommandButton centerButton 
+      Caption         =   "Centre"
+      Height          =   375
+      Left            =   3000
+      TabIndex        =   67
+      Top             =   3720
+      Width           =   975
+   End
    Begin VB.CommandButton setallButton 
       Caption         =   "Set &All"
       Height          =   375
-      Left            =   2880
-      TabIndex        =   65
-      Top             =   1560
+      Left            =   3000
+      TabIndex        =   64
+      Top             =   1320
       Width           =   975
    End
    Begin MSComDlg.CommonDialog settingsFileDialog 
-      Left            =   3600
+      Left            =   3720
       Top             =   -360
       _ExtentX        =   847
       _ExtentY        =   847
@@ -32,15 +49,15 @@ Begin VB.Form sema4SetForm
    Begin VB.Frame servoSettingOptionGroup 
       BorderStyle     =   0  'None
       Height          =   3495
-      Left            =   960
-      TabIndex        =   7
+      Left            =   1080
+      TabIndex        =   6
       Top             =   480
       Width           =   1455
       Begin VB.OptionButton servoSettingOption 
          Height          =   255
          Index           =   1
          Left            =   120
-         TabIndex        =   47
+         TabIndex        =   46
          Top             =   2160
          Width           =   255
       End
@@ -48,7 +65,7 @@ Begin VB.Form sema4SetForm
          Height          =   255
          Index           =   16
          Left            =   120
-         TabIndex        =   46
+         TabIndex        =   45
          Top             =   720
          Width           =   255
       End
@@ -56,7 +73,7 @@ Begin VB.Form sema4SetForm
          Height          =   255
          Index           =   17
          Left            =   120
-         TabIndex        =   45
+         TabIndex        =   44
          Top             =   360
          Width           =   255
       End
@@ -64,7 +81,7 @@ Begin VB.Form sema4SetForm
          Height          =   255
          Index           =   19
          Left            =   120
-         TabIndex        =   44
+         TabIndex        =   43
          Top             =   2520
          Width           =   255
       End
@@ -72,7 +89,7 @@ Begin VB.Form sema4SetForm
          Height          =   255
          Index           =   0
          Left            =   120
-         TabIndex        =   43
+         TabIndex        =   42
          Top             =   1080
          Width           =   255
       End
@@ -80,7 +97,7 @@ Begin VB.Form sema4SetForm
          Height          =   255
          Index           =   18
          Left            =   120
-         TabIndex        =   42
+         TabIndex        =   41
          Top             =   0
          Width           =   255
       End
@@ -88,7 +105,7 @@ Begin VB.Form sema4SetForm
          Height          =   255
          Index           =   20
          Left            =   120
-         TabIndex        =   41
+         TabIndex        =   40
          Top             =   2880
          Width           =   255
       End
@@ -96,7 +113,7 @@ Begin VB.Form sema4SetForm
          Height          =   255
          Index           =   2
          Left            =   120
-         TabIndex        =   40
+         TabIndex        =   39
          Top             =   1440
          Width           =   255
       End
@@ -104,7 +121,7 @@ Begin VB.Form sema4SetForm
          Height          =   255
          Index           =   21
          Left            =   120
-         TabIndex        =   39
+         TabIndex        =   38
          Top             =   3240
          Width           =   255
       End
@@ -112,7 +129,7 @@ Begin VB.Form sema4SetForm
          Height          =   255
          Index           =   3
          Left            =   120
-         TabIndex        =   38
+         TabIndex        =   37
          Top             =   1800
          Width           =   255
       End
@@ -120,7 +137,7 @@ Begin VB.Form sema4SetForm
          Height          =   255
          Index           =   7
          Left            =   480
-         TabIndex        =   37
+         TabIndex        =   36
          Top             =   1800
          Width           =   255
       End
@@ -128,7 +145,7 @@ Begin VB.Form sema4SetForm
          Height          =   255
          Index           =   27
          Left            =   480
-         TabIndex        =   36
+         TabIndex        =   35
          Top             =   3240
          Width           =   255
       End
@@ -136,7 +153,7 @@ Begin VB.Form sema4SetForm
          Height          =   255
          Index           =   6
          Left            =   480
-         TabIndex        =   35
+         TabIndex        =   34
          Top             =   1440
          Width           =   255
       End
@@ -144,7 +161,7 @@ Begin VB.Form sema4SetForm
          Height          =   255
          Index           =   26
          Left            =   480
-         TabIndex        =   34
+         TabIndex        =   33
          Top             =   2880
          Width           =   255
       End
@@ -152,7 +169,7 @@ Begin VB.Form sema4SetForm
          Height          =   255
          Index           =   24
          Left            =   480
-         TabIndex        =   33
+         TabIndex        =   32
          Top             =   0
          Width           =   255
       End
@@ -160,7 +177,7 @@ Begin VB.Form sema4SetForm
          Height          =   255
          Index           =   4
          Left            =   480
-         TabIndex        =   32
+         TabIndex        =   31
          Top             =   1080
          Width           =   255
       End
@@ -168,7 +185,7 @@ Begin VB.Form sema4SetForm
          Height          =   255
          Index           =   25
          Left            =   480
-         TabIndex        =   31
+         TabIndex        =   30
          Top             =   2520
          Width           =   255
       End
@@ -176,7 +193,7 @@ Begin VB.Form sema4SetForm
          Height          =   255
          Index           =   23
          Left            =   480
-         TabIndex        =   30
+         TabIndex        =   29
          Top             =   360
          Width           =   255
       End
@@ -184,7 +201,7 @@ Begin VB.Form sema4SetForm
          Height          =   255
          Index           =   22
          Left            =   480
-         TabIndex        =   29
+         TabIndex        =   28
          Top             =   720
          Width           =   255
       End
@@ -192,7 +209,7 @@ Begin VB.Form sema4SetForm
          Height          =   255
          Index           =   5
          Left            =   480
-         TabIndex        =   28
+         TabIndex        =   27
          Top             =   2160
          Width           =   255
       End
@@ -200,7 +217,7 @@ Begin VB.Form sema4SetForm
          Height          =   255
          Index           =   11
          Left            =   840
-         TabIndex        =   27
+         TabIndex        =   26
          Top             =   1800
          Width           =   255
       End
@@ -208,7 +225,7 @@ Begin VB.Form sema4SetForm
          Height          =   255
          Index           =   33
          Left            =   840
-         TabIndex        =   26
+         TabIndex        =   25
          Top             =   3240
          Width           =   255
       End
@@ -216,7 +233,7 @@ Begin VB.Form sema4SetForm
          Height          =   255
          Index           =   10
          Left            =   840
-         TabIndex        =   25
+         TabIndex        =   24
          Top             =   1440
          Width           =   255
       End
@@ -224,7 +241,7 @@ Begin VB.Form sema4SetForm
          Height          =   255
          Index           =   32
          Left            =   840
-         TabIndex        =   24
+         TabIndex        =   23
          Top             =   2880
          Width           =   255
       End
@@ -232,7 +249,7 @@ Begin VB.Form sema4SetForm
          Height          =   255
          Index           =   30
          Left            =   840
-         TabIndex        =   23
+         TabIndex        =   22
          Top             =   0
          Width           =   255
       End
@@ -240,7 +257,7 @@ Begin VB.Form sema4SetForm
          Height          =   255
          Index           =   8
          Left            =   840
-         TabIndex        =   22
+         TabIndex        =   21
          Top             =   1080
          Width           =   255
       End
@@ -248,7 +265,7 @@ Begin VB.Form sema4SetForm
          Height          =   255
          Index           =   31
          Left            =   840
-         TabIndex        =   21
+         TabIndex        =   20
          Top             =   2520
          Width           =   255
       End
@@ -256,7 +273,7 @@ Begin VB.Form sema4SetForm
          Height          =   255
          Index           =   29
          Left            =   840
-         TabIndex        =   20
+         TabIndex        =   19
          Top             =   360
          Width           =   255
       End
@@ -264,7 +281,7 @@ Begin VB.Form sema4SetForm
          Height          =   255
          Index           =   28
          Left            =   840
-         TabIndex        =   19
+         TabIndex        =   18
          Top             =   720
          Width           =   255
       End
@@ -272,7 +289,7 @@ Begin VB.Form sema4SetForm
          Height          =   255
          Index           =   9
          Left            =   840
-         TabIndex        =   18
+         TabIndex        =   17
          Top             =   2160
          Width           =   255
       End
@@ -280,7 +297,7 @@ Begin VB.Form sema4SetForm
          Height          =   255
          Index           =   15
          Left            =   1200
-         TabIndex        =   17
+         TabIndex        =   16
          Top             =   1800
          Width           =   255
       End
@@ -288,7 +305,7 @@ Begin VB.Form sema4SetForm
          Height          =   255
          Index           =   39
          Left            =   1200
-         TabIndex        =   16
+         TabIndex        =   15
          Top             =   3240
          Width           =   255
       End
@@ -296,7 +313,7 @@ Begin VB.Form sema4SetForm
          Height          =   255
          Index           =   14
          Left            =   1200
-         TabIndex        =   15
+         TabIndex        =   14
          Top             =   1440
          Width           =   255
       End
@@ -304,7 +321,7 @@ Begin VB.Form sema4SetForm
          Height          =   255
          Index           =   38
          Left            =   1200
-         TabIndex        =   14
+         TabIndex        =   13
          Top             =   2880
          Width           =   255
       End
@@ -312,7 +329,7 @@ Begin VB.Form sema4SetForm
          Height          =   255
          Index           =   36
          Left            =   1200
-         TabIndex        =   13
+         TabIndex        =   12
          Top             =   0
          Width           =   255
       End
@@ -320,7 +337,7 @@ Begin VB.Form sema4SetForm
          Height          =   255
          Index           =   12
          Left            =   1200
-         TabIndex        =   12
+         TabIndex        =   11
          Top             =   1080
          Width           =   255
       End
@@ -328,7 +345,7 @@ Begin VB.Form sema4SetForm
          Height          =   255
          Index           =   37
          Left            =   1200
-         TabIndex        =   11
+         TabIndex        =   10
          Top             =   2520
          Width           =   255
       End
@@ -336,7 +353,7 @@ Begin VB.Form sema4SetForm
          Height          =   255
          Index           =   35
          Left            =   1200
-         TabIndex        =   10
+         TabIndex        =   9
          Top             =   360
          Width           =   255
       End
@@ -344,7 +361,7 @@ Begin VB.Form sema4SetForm
          Height          =   255
          Index           =   34
          Left            =   1200
-         TabIndex        =   9
+         TabIndex        =   8
          Top             =   720
          Width           =   255
       End
@@ -352,7 +369,7 @@ Begin VB.Form sema4SetForm
          Height          =   255
          Index           =   13
          Left            =   1200
-         TabIndex        =   8
+         TabIndex        =   7
          Top             =   2160
          Width           =   255
       End
@@ -360,23 +377,22 @@ Begin VB.Form sema4SetForm
    Begin VB.CommandButton setButton 
       Caption         =   "&Set"
       Height          =   375
-      Left            =   2880
+      Left            =   3000
       TabIndex        =   5
-      Top             =   2520
+      Top             =   2280
       Width           =   975
    End
    Begin VB.CommandButton resetButton 
       Caption         =   "&Reset"
       Height          =   375
-      Left            =   2880
+      Left            =   3000
       TabIndex        =   3
-      Top             =   3480
+      Top             =   3240
       Width           =   975
    End
    Begin VB.HScrollBar valueScroller 
       Height          =   255
-      LargeChange     =   16
-      Left            =   1200
+      Left            =   1320
       Max             =   255
       TabIndex        =   2
       Top             =   4200
@@ -385,21 +401,21 @@ Begin VB.Form sema4SetForm
    Begin VB.CommandButton storeButton 
       Caption         =   "S&tore"
       Height          =   375
-      Left            =   2880
+      Left            =   3000
       TabIndex        =   1
-      Top             =   3000
+      Top             =   2760
       Width           =   975
    End
    Begin VB.CommandButton runButton 
       Caption         =   "&Run"
       Height          =   375
-      Left            =   2880
+      Left            =   3000
       TabIndex        =   0
-      Top             =   2040
+      Top             =   1800
       Width           =   975
    End
    Begin MSCommLib.MSComm comPort 
-      Left            =   3000
+      Left            =   3120
       Top             =   -480
       _ExtentX        =   1005
       _ExtentY        =   1005
@@ -411,21 +427,31 @@ Begin VB.Form sema4SetForm
    Begin VB.Label connectionText 
       Alignment       =   1  'Right Justify
       BackColor       =   &H8000000E&
-      Caption         =   "Com1"
+      BackStyle       =   0  'Transparent
+      Caption         =   "Offline"
+      BeginProperty Font 
+         Name            =   "MS Sans Serif"
+         Size            =   8.25
+         Charset         =   0
+         Weight          =   700
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
       Height          =   255
       Left            =   3360
-      TabIndex        =   67
-      Top             =   1200
-      Width           =   495
+      TabIndex        =   66
+      Top             =   960
+      Width           =   615
    End
    Begin VB.Label connectionLabel 
       Alignment       =   1  'Right Justify
       AutoSize        =   -1  'True
       Caption         =   "Connection:"
       Height          =   195
-      Left            =   3000
-      TabIndex        =   66
-      Top             =   960
+      Left            =   3120
+      TabIndex        =   65
+      Top             =   720
       Width           =   855
    End
    Begin VB.Label compatabilityLabel 
@@ -433,27 +459,37 @@ Begin VB.Form sema4SetForm
       AutoSize        =   -1  'True
       Caption         =   "Compatability:"
       Height          =   195
-      Left            =   2880
-      TabIndex        =   64
-      Top             =   360
+      Left            =   3000
+      TabIndex        =   63
+      Top             =   120
       Width           =   975
    End
    Begin VB.Label compatabilityText 
       Alignment       =   1  'Right Justify
       BackColor       =   &H8000000E&
+      BackStyle       =   0  'Transparent
       Caption         =   "Sema4"
+      BeginProperty Font 
+         Name            =   "MS Sans Serif"
+         Size            =   8.25
+         Charset         =   0
+         Weight          =   700
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
       Height          =   255
-      Left            =   3360
-      TabIndex        =   63
-      Top             =   600
-      Width           =   495
+      Left            =   3000
+      TabIndex        =   62
+      Top             =   360
+      Width           =   975
    End
    Begin VB.Label servo4Label 
       Alignment       =   2  'Center
       Caption         =   "4"
       Height          =   195
-      Left            =   2190
-      TabIndex        =   62
+      Left            =   2310
+      TabIndex        =   61
       Top             =   120
       Width           =   285
    End
@@ -461,98 +497,108 @@ Begin VB.Form sema4SetForm
       Alignment       =   2  'Center
       Caption         =   "1"
       Height          =   195
-      Left            =   1110
-      TabIndex        =   61
+      Left            =   1230
+      TabIndex        =   60
       Top             =   120
       Width           =   285
    End
    Begin VB.Label onBounce3Label 
+      Alignment       =   1  'Right Justify
       AutoSize        =   -1  'True
       Caption         =   "On Bounce 3"
       Height          =   195
-      Left            =   0
-      TabIndex        =   60
+      Left            =   120
+      TabIndex        =   59
       Top             =   3720
       Width           =   945
    End
    Begin VB.Label onBounce2Label 
+      Alignment       =   1  'Right Justify
       AutoSize        =   -1  'True
       Caption         =   "On Bounce 2"
       Height          =   195
-      Left            =   0
-      TabIndex        =   59
+      Left            =   120
+      TabIndex        =   58
       Top             =   3360
       Width           =   945
    End
    Begin VB.Label onBounce1Label 
+      Alignment       =   1  'Right Justify
       AutoSize        =   -1  'True
       Caption         =   "On Bounce 1"
       Height          =   195
-      Left            =   0
-      TabIndex        =   58
+      Left            =   120
+      TabIndex        =   57
       Top             =   3000
       Width           =   945
    End
    Begin VB.Label offBounce3Label 
+      Alignment       =   1  'Right Justify
       AutoSize        =   -1  'True
       Caption         =   "Off Bounce 3"
       Height          =   195
-      Left            =   0
-      TabIndex        =   57
+      Left            =   120
+      TabIndex        =   56
       Top             =   480
       Width           =   945
    End
    Begin VB.Label offBounce2Label 
+      Alignment       =   1  'Right Justify
       AutoSize        =   -1  'True
       Caption         =   "Off Bounce 2"
       Height          =   195
-      Left            =   0
-      TabIndex        =   56
+      Left            =   120
+      TabIndex        =   55
       Top             =   840
       Width           =   945
    End
    Begin VB.Label offBounce1Label 
+      Alignment       =   1  'Right Justify
       AutoSize        =   -1  'True
       Caption         =   "Off Bounce 1"
       Height          =   195
-      Left            =   0
-      TabIndex        =   55
+      Left            =   120
+      TabIndex        =   54
       Top             =   1200
       Width           =   945
    End
    Begin VB.Label onSpeedLabel 
+      Alignment       =   1  'Right Justify
       AutoSize        =   -1  'True
-      Caption         =   "OnSpeed"
+      Caption         =   "On Speed"
       Height          =   195
-      Left            =   270
-      TabIndex        =   54
+      Left            =   360
+      TabIndex        =   53
       Top             =   2280
-      Width           =   675
+      Width           =   720
    End
    Begin VB.Label offSpeedLabel 
+      Alignment       =   1  'Right Justify
       AutoSize        =   -1  'True
       Caption         =   "Off Speed"
       Height          =   195
-      Left            =   225
-      TabIndex        =   53
+      Left            =   345
+      TabIndex        =   52
       Top             =   1920
       Width           =   720
    End
    Begin VB.Label onPositionLabel 
+      Alignment       =   1  'Right Justify
       AutoSize        =   -1  'True
       Caption         =   "On Position"
       Height          =   195
-      Left            =   135
-      TabIndex        =   52
+      Left            =   255
+      TabIndex        =   51
       Top             =   2640
       Width           =   810
    End
    Begin VB.Label offPositionLabel 
+      Alignment       =   1  'Right Justify
       AutoSize        =   -1  'True
       Caption         =   "Off Position"
       Height          =   195
-      Left            =   135
-      TabIndex        =   51
+      Left            =   255
+      TabIndex        =   50
       Top             =   1560
       Width           =   810
    End
@@ -560,8 +606,8 @@ Begin VB.Form sema4SetForm
       Alignment       =   2  'Center
       Caption         =   "2"
       Height          =   195
-      Left            =   1470
-      TabIndex        =   50
+      Left            =   1590
+      TabIndex        =   49
       Top             =   120
       Width           =   285
    End
@@ -569,8 +615,8 @@ Begin VB.Form sema4SetForm
       Alignment       =   2  'Center
       Caption         =   "3"
       Height          =   195
-      Left            =   1830
-      TabIndex        =   49
+      Left            =   1950
+      TabIndex        =   48
       Top             =   120
       Width           =   285
    End
@@ -578,26 +624,16 @@ Begin VB.Form sema4SetForm
       AutoSize        =   -1  'True
       Caption         =   "Servo:"
       Height          =   195
-      Left            =   480
-      TabIndex        =   48
+      Left            =   600
+      TabIndex        =   47
       Top             =   120
       Width           =   465
-   End
-   Begin VB.Label valueText 
-      Alignment       =   1  'Right Justify
-      BackColor       =   &H8000000E&
-      Caption         =   "0"
-      Height          =   255
-      Left            =   720
-      TabIndex        =   6
-      Top             =   4200
-      Width           =   375
    End
    Begin VB.Label valueLabel 
       AutoSize        =   -1  'True
       Caption         =   "Value:"
       Height          =   195
-      Left            =   120
+      Left            =   240
       TabIndex        =   4
       Top             =   4200
       Width           =   450
@@ -662,8 +698,14 @@ Private Enum OperatingMode
     SETTING
 End Enum
 
+' Key code to indicate completion of direct value input to valueText TextBox
+Const RTN_KEYCODE As Integer = 13
+
 ' Settings file format version
 Const SETTINGS_FILE_FORMAT_VERSION As Integer = 0
+
+' Maximum speed for Servo4
+Const SERVO4_MAX_SPEED As Integer = 7
 
 ' Number of setting values for Servo1
 Const SERVO1_SETTINGS As Integer = 4
@@ -710,6 +752,8 @@ Dim currentMode As OperatingMode
 
 Private Sub openComPort(newComPortNumber As Integer)
 
+On Error GoTo commerror
+
 ' If COM port currently open close it
 If True = comPort.PortOpen Then
     comPort.PortOpen = False
@@ -717,7 +761,18 @@ End If
 
 ' Set new COM port number and open COM port
 comPort.CommPort = newComPortNumber
+
 comPort.PortOpen = True
+
+Exit Sub
+
+commerror:
+
+MsgBox "There was a problem opening the selected Com Port. Please start again and choose a different port.", _
+       vbExclamation, _
+       "Port Error"
+
+End
 
 End Sub
 
@@ -732,16 +787,25 @@ newComPortName = InputBox("Select COM Port", _
                           oldComPortNumber)
 
 ' Convert entered COM Port string to an integer value
-newComPortNumber = Val(newComPortName)
+newComPortNumber = CInt(Val(newComPortName))
 
 ' Ensure COM port number is greater than 0
 If (1 > newComPortNumber) Then
-    End
-End If
+    If True = comPort.PortOpen Then
+        comPort.PortOpen = False
+    End If
+    connectionText.Caption = "Offline"
+    setOffline
+Else
+    connectionText.Caption = "Com" + newComPortName
+    openComPort (newComPortNumber)
 
-' Update current COM port display and open new COM port
-connectionText.Caption = "Com" + newComPortName
-openComPort (newComPortNumber)
+    If RUNNING = currentMode Then
+        setRunningMode
+    Else
+        setSettingMode
+    End If
+End If
 
 End Sub
 
@@ -759,9 +823,7 @@ changeComPort
 
 End Sub
 
-Private Sub setRunningMode()
-
-currentMode = RUNNING
+Private Sub setOffline()
 
 ' Allow change of compatability selection, excluding that currently selected
 If compatabilityText.Caption = servo4CompatabilityText Then
@@ -772,25 +834,57 @@ ElseIf compatabilityText.Caption = sema1CompatabilityText Then
     optCompatServo4MenuItem.Enabled = True
     optCompatSema4MenuItem.Enabled = True
     optCompatSema1MenuItem.Enabled = False
-
-    sendCommand (RUN_COMMAND)
 Else
     optCompatServo4MenuItem.Enabled = True
     optCompatSema4MenuItem.Enabled = False
-    optCompatSema1MenuItem.Enabled = False
-
-    sendCommand (RUN_COMMAND)
+    optCompatSema1MenuItem.Enabled = True
 End If
 
+setallButton.Enabled = False
 runButton.Enabled = False
+setButton.Enabled = False
+storeButton.Enabled = False
+resetButton.Enabled = False
+centerButton.Enabled = True
+valueScroller.Enabled = True
+valuetext.Enabled = True
 
-' Allow sending of commands to Set, Store, and Reset settings
-setButton.Enabled = True
-storeButton.Enabled = True
-resetButton.Enabled = True
+End Sub
 
-' Prevent changing of setting values
-valueScroller.Enabled = False
+Private Sub setRunningMode()
+
+currentMode = RUNNING
+
+If comPort.PortOpen Then
+    If compatabilityText.Caption = servo4CompatabilityText Then
+        optCompatServo4MenuItem.Enabled = False
+        optCompatSema4MenuItem.Enabled = True
+        optCompatSema1MenuItem.Enabled = True
+    ElseIf compatabilityText.Caption = sema1CompatabilityText Then
+        optCompatServo4MenuItem.Enabled = True
+        optCompatSema4MenuItem.Enabled = True
+        optCompatSema1MenuItem.Enabled = False
+
+        sendCommand (RUN_COMMAND)
+    Else
+        optCompatServo4MenuItem.Enabled = True
+        optCompatSema4MenuItem.Enabled = False
+        optCompatSema1MenuItem.Enabled = True
+
+        sendCommand (RUN_COMMAND)
+    End If
+
+    setallButton.Enabled = True
+    runButton.Enabled = False
+    setButton.Enabled = True
+    storeButton.Enabled = True
+    resetButton.Enabled = True
+    centerButton.Enabled = False
+    valueScroller.Enabled = False
+    valuetext.Enabled = False
+Else
+    setOffline
+End If
 
 End Sub
 
@@ -803,15 +897,16 @@ optCompatServo4MenuItem.Enabled = False
 optCompatSema4MenuItem.Enabled = False
 optCompatSema1MenuItem.Enabled = False
 
+setallButton.Enabled = False
 runButton.Enabled = True
 
 ' Prevent sending of commands to Set, Store, and Reset settings
 setButton.Enabled = False
 storeButton.Enabled = False
 resetButton.Enabled = False
-
-' Allow changing of setting values
+centerButton.Enabled = True
 valueScroller.Enabled = True
+valuetext.Enabled = True
 
 End Sub
 
@@ -819,18 +914,19 @@ Private Sub streamCurrentSetting()
 ' Continuosly send the currently selected setting and value so that the value
 ' can be changed interactively
 
-On Error GoTo comPortFailure
+If comPort.PortOpen Then
+    On Error GoTo comPortFailure
 
-While (SETTING = currentMode)
-    ' Perform event dispatch to keep GUI alive,
-    ' allows currentMode to be changed
-    DoEvents
+    While (SETTING = currentMode)
+        ' Perform event dispatch to keep GUI alive, allows currentMode to be changed
+        DoEvents
 
-    ' Send setting message for currently selected setting and value
-    comPort.Output = Chr(SYNCH_BYTE) _
-                     + Chr(SETTING_BASE + settingCommand(settingIndex)) _
-                     + Format(settingValue(settingIndex), "000")
-Wend
+        ' Send setting message for currently selected setting and value
+        comPort.Output = Chr(SYNCH_BYTE) _
+                         + Chr(SETTING_BASE + settingCommand(settingIndex)) _
+                         + Format(settingValue(settingIndex), "000")
+    Wend
+End If
 
 Exit Sub
 
@@ -844,20 +940,21 @@ Private Sub sendCommand(commandCharacter As String, _
 ' Send the given command, and optionally a value for the command, repeatedly
 ' a set number of times to allow for garbled reception as link has no handshake
 
-On Error GoTo comPortFailure
-
 Dim n As Integer
 
-For n = 1 To SEND_ITTERATIONS
-    ' Perform event dispatch to keep GUI alive,
-    ' allows currentMode to be changed
-    DoEvents
+If comPort.PortOpen Then
+    On Error GoTo comPortFailure
 
-    ' Send command message
-    comPort.Output = Chr(SYNCH_BYTE) _
-                     + commandCharacter _
-                     + Format(commandValue, "000")
-Next
+    For n = 1 To SEND_ITTERATIONS
+        ' Perform event dispatch to keep GUI alive, allows currentMode to be changed
+        DoEvents
+
+        ' Send command message
+        comPort.Output = Chr(SYNCH_BYTE) _
+                         + commandCharacter _
+                         + Format(commandValue, "000")
+    Next
+End If
 
 Exit Sub
 
@@ -888,12 +985,12 @@ sema4SetForm.MousePointer = vbDefault
 
 End Sub
 
-Private Sub checkIfSaveNeeded()
+Private Sub checkIfSaveNeeded(Optional beforeAction As String = "overwriting")
 ' Check if any settings have been changed and if so offer a chance to save
 ' these before proceeding
 
 If settingsChanged Then
-    If vbYes = MsgBox("Settings have changed, save before overwriting?", _
+    If vbYes = MsgBox("Settings have changed, save before " + beforeAction + "?", _
                       vbYesNo) Then
         saveSettings
     End If
@@ -915,8 +1012,10 @@ Next
 
 ' Select first setting option control and display corresponding value
 settingIndex = 0
-servoSettingOption(settingIndex).Value = True
+valueScroller.Max = 255
 valueScroller.Value = settingValue(settingIndex)
+valuetext.Text = settingValue(settingIndex)
+servoSettingOption(settingIndex).Value = True
 
 settingsChanged = False
 
@@ -978,8 +1077,10 @@ Close #1
 
 ' Select first setting option control and display corresponding value
 settingIndex = 0
-servoSettingOption(settingIndex).Value = True
+valueScroller.Max = 255
 valueScroller.Value = settingValue(settingIndex)
+valuetext.Text = settingValue(settingIndex)
+servoSettingOption(settingIndex).Value = True
 
 settingsChanged = False
 
@@ -1052,8 +1153,10 @@ Next
 
 ' Select first setting option control and display corresponding value
 settingIndex = 0
-servoSettingOption(settingIndex).Value = True
+valueScroller.Max = 255
 valueScroller.Value = settingValue(settingIndex)
+valuetext.Text = settingValue(settingIndex)
+servoSettingOption(settingIndex).Value = True
 
 ' Update compatability mode display
 compatabilityText.Caption = servo4CompatabilityText
@@ -1090,8 +1193,10 @@ Next
 
 ' Select first setting option control and display corresponding value
 settingIndex = 0
-servoSettingOption(settingIndex).Value = True
+valueScroller.Max = 255
 valueScroller.Value = settingValue(settingIndex)
+valuetext.Text = settingValue(settingIndex)
+servoSettingOption(settingIndex).Value = True
 
 ' Update compatability mode display
 compatabilityText.Caption = sema4CompatabilityText
@@ -1124,13 +1229,37 @@ For settingIndex = SERVO4_SETTINGS To (SERVO4_SETTINGS + SEMA_SETTINGS - 1)
     servoSettingOption(settingIndex).Enabled = True
 Next
 
-' Update compatability mode display
+settingIndex = 0
+valueScroller.Max = 255
+valueScroller.Value = settingValue(settingIndex)
+valuetext.Text = settingValue(settingIndex)
+servoSettingOption(settingIndex).Value = True
+
 compatabilityText.Caption = sema1CompatabilityText
 
 ' Allow change of compatability selection, excluding Servo4
 optCompatSema4MenuItem.Enabled = True
 optCompatSema1MenuItem.Enabled = False
 optCompatServo4MenuItem.Enabled = True
+
+End Sub
+
+
+Private Sub changeSettingValue(newValue As Integer)
+
+If newValue > valueScroller.Max Then
+    newValue = valueScroller.Max
+End If
+If newValue < valueScroller.Min Then
+    newValue = valueScroller.Min
+End If
+
+If newValue <> settingValue(settingIndex) Then
+    settingValue(settingIndex) = newValue
+    valueScroller.Value = newValue
+    valuetext.Text = newValue
+    settingsChanged = True
+End If
 
 End Sub
 
@@ -1145,18 +1274,20 @@ settingsFileDialog.FilterIndex = 1
 
 settingsFilename = ""
 
-selectComPort 1
+setServo4Compatabillity
 
-settingsChanged = False
 newSettings
+settingsChanged = False
 
-setSema4Compatabillity
+selectComPort 1
 
 Show
 
 End Sub
 
 Private Sub Form_Unload(Cancel As Integer)
+
+checkIfSaveNeeded "exiting"
 
 End
 
@@ -1189,14 +1320,14 @@ End Sub
 
 Private Sub fileExitMenuItem_Click()
 
-End
+Unload Me
 
 End Sub
 
 Private Sub helpAboutMenuItem_Click()
 
-   MsgBox "Sema4Setv1c 8 February 2009", vbOKOnly, "About Sema4Set"
-
+sema4About.Show
+  
 End Sub
 
 Private Sub optSerPortMenuItem_Click()
@@ -1208,18 +1339,21 @@ End Sub
 Private Sub optCompatServo4MenuItem_Click()
 
 setServo4Compatabillity
+settingsChanged = True
 
 End Sub
 
 Private Sub optCompatSema4MenuItem_Click()
 
 setSema4Compatabillity
+settingsChanged = True
 
 End Sub
 
 Private Sub optCompatSema1MenuItem_Click()
 
 setSema1Compatabillity
+settingsChanged = True
 
 End Sub
 
@@ -1262,19 +1396,51 @@ sema4SetForm.MousePointer = vbDefault
 
 End Sub
 
-Private Sub servoSettingOption_Click(Index As Integer)
+Private Sub centerButton_Click()
 
-' Select setting to display or change
-settingIndex = Index
+changeSettingValue ((valueScroller.Max - valueScroller.Min) / 2)
+
+End Sub
+
+Private Sub servoSettingOption_Click(optionIndex As Integer)
+
+settingIndex = optionIndex
+valueScroller.Max = 255
+
+Select Case settingIndex
+
+Case 2, 3, 6, 7, 10, 11, 14, 15
+    
+    ' Selected setting is a speed
+    If compatabilityText.Caption = servo4CompatabilityText Then
+        ' Compatability mode is Servo4, limit maximum speed
+        valueScroller.Max = SERVO4_MAX_SPEED
+    End If
+
+End Select
+    
+changeSettingValue settingValue(settingIndex)
 valueScroller.Value = settingValue(settingIndex)
+valuetext.Text = settingValue(settingIndex)
 
 End Sub
 
 Private Sub valueScroller_Change()
 
-' Change setting value
-settingValue(settingIndex) = valueScroller.Value
-valueText.Caption = settingValue(settingIndex)
-settingsChanged = True
+changeSettingValue valueScroller.Value
+
+End Sub
+
+Private Sub valuetext_KeyUp(keyCode As Integer, shift As Integer)
+
+If RTN_KEYCODE = keyCode Then
+    changeSettingValue CInt(Val(valuetext.Text))
+End If
+
+End Sub
+
+Private Sub valuetext_LostFocus()
+
+changeSettingValue CInt(Val(valuetext.Text))
 
 End Sub
