@@ -847,11 +847,6 @@ End If
 
 End Sub
 
-Private Sub setSettingValue(newValue As Integer)
-
-
-End Sub
-
 Private Sub selectSetting(newSettingIndex As Integer)
 
 settingIndex = newSettingIndex
