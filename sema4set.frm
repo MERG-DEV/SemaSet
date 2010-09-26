@@ -671,10 +671,10 @@ Begin VB.Form sema4SetForm
             Caption         =   "Se&rvo4"
          End
          Begin VB.Menu optCompatSema4MenuItem 
-            Caption         =   "Se&ma4"
+            Caption         =   "Sema&4"
          End
-         Begin VB.Menu optCompatSema1MenuItem 
-            Caption         =   "Se&ma1"
+         Begin VB.Menu optCompatSema4bMenuItem 
+            Caption         =   "Sema4&b"
          End
       End
    End
@@ -707,20 +707,17 @@ Const SETTINGS_FILE_FORMAT_VERSION As Integer = 0
 ' Maximum speed for Servo4
 Const SERVO4_MAX_SPEED As Integer = 7
 
-' Number of setting values for Servo1
-Const SERVO1_SETTINGS As Integer = 4
+' Number of setting values for Servo (on and off, speed and position)
+Const SERVO_SETTINGS As Integer = 4
 
 ' Number of setting values for Servo4
-Const SERVO4_SETTINGS As Integer = 4 * SERVO1_SETTINGS
+Const SERVO4_SETTINGS As Integer = 4 * SERVO_SETTINGS
 
-' Number of extra setting values for Sema
+' Number of extra setting values for Sema (3 off and 3 on bounces)
 Const SEMA_SETTINGS  As Integer = 6
 
-' Number of setting values for Sema1
-Const SEMA1_SETTINGS  As Integer = SEMA_SETTINGS + SERVO1_SETTINGS
-
 ' Number of setting values for Sema4
-Const SEMA4_SETTINGS  As Integer = 4 * SEMA1_SETTINGS
+Const SEMA4_SETTINGS  As Integer = 4 * (SEMA_SETTINGS + SERVO_SETTINGS)
 
 ' Number of times to send a non streaming command or setting string
 Const SEND_ITTERATIONS As Integer = 20
@@ -738,10 +735,49 @@ Const RUN_COMMAND   As String = "$"
 ' Compatability names
 Const servo4CompatabilityText As String = "Servo4"
 Const sema4CompatabilityText  As String = "Sema4"
-Const sema1CompatabilityText  As String = "Sema1"
+Const sema4bCompatabilityText As String = "Sema4b"
 
+' Arrays for setting values and commands, layout:
+'  Servo 1
+'   Off Position, On Position, Off Speed, On Speed
+'  Servo 2
+'   Off Position, On Position, Off Speed, On Speed
+'  Servo 3
+'   Off Position, On Position, Off Speed, On Speed
+'  Servo 4
+'   Off Position, On Position, Off Speed, On Speed
+'  Servo 1
+'   Off Bounce 1, Off Bounce 2, Off Bounce 3,
+'   On Bounce 1,  On Bounce 2,  On Bounce 3,
+'  Servo 2
+'   Off Bounce 1, Off Bounce 2, Off Bounce 3,
+'   On Bounce 1,  On Bounce 2,  On Bounce 3,
+'  Servo 3
+'   Off Bounce 1, Off Bounce 2, Off Bounce 3,
+'   On Bounce 1,  On Bounce 2,  On Bounce 3,
+'  Servo 4
+'   Off Bounce 1, Off Bounce 2, Off Bounce 3,
+'   On Bounce 1,  On Bounce 2,  On Bounce 3
 Dim settingValue(0 To (SEMA4_SETTINGS - 1))   As Integer
 Dim settingCommand(0 To (SEMA4_SETTINGS - 1)) As Integer
+
+' Define array index constants for certain values
+Const OFF_PSTN_NDX_1 As Integer = 0
+Const ON_PSTN_NDX_1  As Integer = 1
+Const OFF_SPD_NDX_1  As Integer = 2
+Const ON_SPD_NDX_1   As Integer = 3
+Const OFF_PSTN_NDX_2 As Integer = 4
+Const ON_PSTN_NDX_2  As Integer = 5
+Const OFF_SPD_NDX_2  As Integer = 6
+Const ON_SPD_NDX_2   As Integer = 7
+Const OFF_PSTN_NDX_3 As Integer = 8
+Const ON_PSTN_NDX_3  As Integer = 9
+Const OFF_SPD_NDX_3  As Integer = 10
+Const ON_SPD_NDX_3   As Integer = 11
+Const OFF_PSTN_NDX_4 As Integer = 12
+Const ON_PSTN_NDX_4  As Integer = 13
+Const OFF_SPD_NDX_4  As Integer = 14
+Const ON_SPD_NDX_4   As Integer = 15
 
 Dim settingIndex    As Integer
 Dim settingsChanged As Boolean
@@ -852,15 +888,18 @@ Private Sub selectSetting(newSettingIndex As Integer)
 settingIndex = newSettingIndex
 
 valueScroller.Max = 255
+valueScroller.LargeChange = 18
 
 Select Case settingIndex
 
-Case 2, 3, 6, 7, 10, 11, 14, 15
+Case ON_SPD_NDX_1, OFF_SPD_NDX_1, ON_SPD_NDX_2, OFF_SPD_NDX_2, _
+     ON_SPD_NDX_3, OFF_SPD_NDX_3, ON_SPD_NDX_4, OFF_SPD_NDX_4
     
     ' Selected setting is a speed
     If compatabilityText.Caption = servo4CompatabilityText Then
         ' Compatability mode is Servo4, limit maximum speed
         valueScroller.Max = SERVO4_MAX_SPEED
+        valueScroller.LargeChange = 1
     End If
 
 End Select
@@ -878,7 +917,7 @@ Private Sub disableAllCompatabilitySelections()
 
     optCompatServo4MenuItem.Enabled = False
     optCompatSema4MenuItem.Enabled = False
-    optCompatSema1MenuItem.Enabled = False
+    optCompatSema4bMenuItem.Enabled = False
 
 End Sub
 
@@ -886,7 +925,7 @@ Private Sub enableAllCompatabilitySelections()
 
     optCompatServo4MenuItem.Enabled = True
     optCompatSema4MenuItem.Enabled = True
-    optCompatSema1MenuItem.Enabled = True
+    optCompatSema4bMenuItem.Enabled = True
 
 End Sub
 
@@ -898,11 +937,11 @@ Private Sub disableServo4CompatabilitySelection()
 
 End Sub
 
-Private Sub disableSema1CompatabilitySelection()
+Private Sub disableSema4bCompatabilitySelection()
 
-    ' Allow change of compatability selection, excluding Sema1
+    ' Allow change of compatability selection, excluding Sema4b
     enableAllCompatabilitySelections
-    optCompatSema1MenuItem.Enabled = False
+    optCompatSema4bMenuItem.Enabled = False
 
 End Sub
 
@@ -917,13 +956,14 @@ End Sub
 Private Sub setOffline()
 
 ' Allow change of compatability selection, excluding that currently selected
-If compatabilityText.Caption = servo4CompatabilityText Then
-    disableServo4CompatabilitySelection
-ElseIf compatabilityText.Caption = sema1CompatabilityText Then
-    disableSema1CompatabilitySelection
-Else
-    disableSema4CompatabilitySelection
-End If
+Select Case compatabilityText.Caption
+    Case servo4CompatabilityText
+        disableServo4CompatabilitySelection
+    Case sema4bCompatabilityText
+        disableSema4bCompatabilitySelection
+    Case Else
+        disableSema4CompatabilitySelection
+End Select
 
 setallButton.Enabled = False
 runButton.Enabled = False
@@ -942,15 +982,16 @@ currentMode = RUNNING
 
 If comPort.PortOpen Then
     ' Enable appropriate Compatability selection
-    If compatabilityText.Caption = servo4CompatabilityText Then
-        disableServo4CompatabilitySelection
-    ElseIf compatabilityText.Caption = sema1CompatabilityText Then
-        disableSema1CompatabilitySelection
-        sendCommand (RUN_COMMAND) ' Ensure module is not in Set mode
-    Else
-        disableSema4CompatabilitySelection
-        sendCommand (RUN_COMMAND) ' Ensure module is not in Set mode
-    End If
+    Select Case compatabilityText.Caption
+        Case servo4CompatabilityText
+            disableServo4CompatabilitySelection
+        Case sema4bCompatabilityText
+            disableSema4bCompatabilitySelection
+            sendCommand (RUN_COMMAND) ' Ensure module is not in Set mode
+        Case Else
+            disableSema4CompatabilitySelection
+            sendCommand (RUN_COMMAND) ' Ensure module is not in Set mode
+    End Select
 
     ' Disable selection of Run mode, enable selection of Set mode
     runButton.Enabled = False
@@ -1002,10 +1043,11 @@ If comPort.PortOpen Then
     On Error GoTo comPortFailure
 
     While (SETTING = currentMode)
-        ' Perform event dispatch to keep GUI alive, allows currentMode to be changed
+        ' Perform event dispatch to keep GUI alive,
+        ' allows currentMode to be changed
         DoEvents
 
-        ' Send setting message for currently selected setting and value
+        ' Send setting command and value for currently selected setting
         comPort.Output = Chr(SYNCH_BYTE) _
                          + Chr(SETTING_BASE + settingCommand(settingIndex)) _
                          + Format(settingValue(settingIndex), "000")
@@ -1035,7 +1077,7 @@ If comPort.PortOpen Then
         ' allows currentMode to be changed
         DoEvents
 
-        ' Send command message
+        ' Send command and value
         comPort.Output = Chr(SYNCH_BYTE) _
                          + commandCharacter _
                          + Format(commandValue, "000")
@@ -1056,8 +1098,11 @@ sema4SetForm.MousePointer = vbHourglass
 
 Dim sendIndex As Integer
 
+' Walk the array of setting values
 For sendIndex = LBound(settingValue) To UBound(settingValue)
+    ' Test if option button for setting is enabled
     If servoSettingOption(sendIndex).Enabled Then
+        ' Send setting command and value
         sendCommand Chr(SETTING_BASE + settingCommand(sendIndex)), _
                     settingValue(sendIndex)
     End If
@@ -1093,6 +1138,7 @@ setRunningMode
 
 checkIfSaveNeeded
 
+' Walk the array of setting values restoring all to default value
 For settingIndex = LBound(settingValue) To UBound(settingValue)
     settingValue(settingIndex) = DEFAULT_SETTING
     selectSetting settingIndex
@@ -1133,13 +1179,14 @@ Dim loadedCompatabilityText As String
 Input #1, loadedCompatabilityText
 
 If loadedCompatabilityText <> compatabilityText.Caption Then
-    If loadedCompatabilityText = servo4CompatabilityText Then
-        setServo4Compatabillity
-    ElseIf loadedCompatabilityText = sema4CompatabilityText Then
-        setSema4Compatabillity
-    Else
-        setSema1Compatabillity
-    End If
+    Select Case loadedCompatabilityText
+        Case servo4CompatabilityText
+            setServo4Compatabillity
+        Case sema4CompatabilityText
+            setSema4Compatabillity
+        Case Else
+            setSema4bCompatabillity
+    End Select
 End If
 
 ' Check version of format for settings in file in order to support reading
@@ -1197,6 +1244,7 @@ Print #1, SETTINGS_FILE_FORMAT_VERSION
 ' Save the setting values to file
 Dim outputIndex As Integer
 
+' Walk the array of setting values writing value to file
 For outputIndex = LBound(settingValue) To UBound(settingValue)
     Print #1, settingValue(outputIndex)
 Next
@@ -1214,7 +1262,7 @@ End Sub
 
 Private Sub initialiseServo4SettingCommands()
 
-' Initialise command values for each setting
+' Initialise command for each setting
 For settingIndex = LBound(settingCommand) To UBound(settingCommand)
     settingCommand(settingIndex) = settingIndex
 Next
@@ -1226,14 +1274,30 @@ Private Sub initialiseSema4SettingCommands()
 initialiseServo4SettingCommands
 
 ' Sema4 has alternative commands for equivalent Servo4 settings
-settingCommand(0) = 40
-settingCommand(1) = 41
-settingCommand(4) = 42
-settingCommand(5) = 43
-settingCommand(8) = 44
-settingCommand(9) = 45
-settingCommand(12) = 46
-settingCommand(13) = 47
+settingCommand(OFF_PSTN_NDX_1) = 40
+settingCommand(ON_PSTN_NDX_1) = 41
+settingCommand(OFF_PSTN_NDX_2) = 42
+settingCommand(ON_PSTN_NDX_2) = 43
+settingCommand(OFF_PSTN_NDX_3) = 44
+settingCommand(ON_PSTN_NDX_3) = 45
+settingCommand(OFF_PSTN_NDX_4) = 46
+settingCommand(ON_PSTN_NDX_4) = 47
+
+End Sub
+
+Private Sub initialiseSema4bSettingCommands()
+
+initialiseSema4SettingCommands
+
+' Sema4b has alternative commands for equivalent Sema4 settings
+settingCommand(OFF_SPD_NDX_1) = 48
+settingCommand(ON_SPD_NDX_1) = 49
+settingCommand(OFF_SPD_NDX_2) = 50
+settingCommand(ON_SPD_NDX_2) = 51
+settingCommand(OFF_SPD_NDX_3) = 52
+settingCommand(ON_SPD_NDX_3) = 53
+settingCommand(OFF_SPD_NDX_4) = 54
+settingCommand(ON_SPD_NDX_4) = 55
 
 End Sub
 
@@ -1283,32 +1347,43 @@ disableSema4CompatabilitySelection
 
 End Sub
 
-Private Sub setSema1Compatabillity()
+Private Sub setSema4bCompatabillity()
 
-' Sema1 is a subset of Sema4
-initialiseSema4SettingCommands
+' Sema4b is a derivative of Sema4
+setSema4Compatabillity
 
-' Disable the option controls to select settings supported by Sema4
-For settingIndex = 0 To (SEMA4_SETTINGS - 1)
-    servoSettingOption(settingIndex).Visible = False
-    servoSettingOption(settingIndex).Enabled = False
-Next
+' Difference is in commands used for certain values
+initialiseSema4bSettingCommands
 
-' Enable the option controls for settings supported by Sema1, two batches
-For settingIndex = 0 To (SERVO1_SETTINGS - 1)
-    servoSettingOption(settingIndex).Visible = True
-    servoSettingOption(settingIndex).Enabled = True
-Next
-For settingIndex = SERVO4_SETTINGS To (SERVO4_SETTINGS + SEMA_SETTINGS - 1)
-    servoSettingOption(settingIndex).Visible = True
-    servoSettingOption(settingIndex).Enabled = True
-Next
+compatabilityText.Caption = sema4bCompatabilityText
 
-selectSetting 0
+disableSema4bCompatabilitySelection
 
-compatabilityText.Caption = sema1CompatabilityText
+End Sub
 
-disableSema1CompatabilitySelection
+Private Sub convertSpeedToServo4()
+
+settingValue(OFF_SPD_NDX_1) = settingValue(OFF_SPD_NDX_1) / 16
+settingValue(ON_SPD_NDX_1) = settingValue(ON_SPD_NDX_1) / 16
+settingValue(OFF_SPD_NDX_2) = settingValue(OFF_SPD_NDX_2) / 16
+settingValue(ON_SPD_NDX_2) = settingValue(ON_SPD_NDX_2) / 16
+settingValue(OFF_SPD_NDX_3) = settingValue(OFF_SPD_NDX_3) / 16
+settingValue(ON_SPD_NDX_3) = settingValue(ON_SPD_NDX_3) / 16
+settingValue(OFF_SPD_NDX_4) = settingValue(OFF_SPD_NDX_4) / 16
+settingValue(ON_SPD_NDX_4) = settingValue(ON_SPD_NDX_4) / 16
+
+End Sub
+
+Private Sub convertSpeedFromServo4()
+
+settingValue(OFF_SPD_NDX_1) = settingValue(OFF_SPD_NDX_1) * 16
+settingValue(ON_SPD_NDX_1) = settingValue(ON_SPD_NDX_1) * 16
+settingValue(OFF_SPD_NDX_2) = settingValue(OFF_SPD_NDX_2) * 16
+settingValue(ON_SPD_NDX_2) = settingValue(ON_SPD_NDX_2) * 16
+settingValue(OFF_SPD_NDX_3) = settingValue(OFF_SPD_NDX_3) * 16
+settingValue(ON_SPD_NDX_3) = settingValue(ON_SPD_NDX_3) * 16
+settingValue(OFF_SPD_NDX_4) = settingValue(OFF_SPD_NDX_4) * 16
+settingValue(ON_SPD_NDX_4) = settingValue(ON_SPD_NDX_4) * 16
 
 End Sub
 
@@ -1316,6 +1391,7 @@ Private Sub Form_Load()
 
 ' Initialisation when form is first loaded
 
+' Set up File Dialog filter to match Sema4 settings files
 settingsFileDialog.Filter = "Sema4Set Files (*.sm4)|*.sm4" _
                             + "|Text Files (*.txt)|*.txt" _
                             + "!All Files (*.*)|*.*"
@@ -1386,6 +1462,7 @@ End Sub
 
 Private Sub optCompatServo4MenuItem_Click()
 
+convertSpeedToServo4
 setServo4Compatabillity
 settingsChanged = True
 
@@ -1393,14 +1470,20 @@ End Sub
 
 Private Sub optCompatSema4MenuItem_Click()
 
+If servo4CompatabilityText = compatabilityText.Caption Then
+    convertSpeedFromServo4
+End If
 setSema4Compatabillity
 settingsChanged = True
 
 End Sub
 
-Private Sub optCompatSema1MenuItem_Click()
+Private Sub optCompatSema4bMenuItem_Click()
 
-setSema1Compatabillity
+If servo4CompatabilityText = compatabilityText.Caption Then
+    convertSpeedFromServo4
+End If
+setSema4bCompatabillity
 settingsChanged = True
 
 End Sub

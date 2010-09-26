@@ -7,7 +7,7 @@ Begin VB.Form sema4About
    ClientTop       =   1935
    ClientWidth     =   3705
    ClipControls    =   0   'False
-   Icon            =   "sema4About.frx":0000
+   Icon            =   "sema4about.frx":0000
    LinkTopic       =   "Form2"
    MaxButton       =   0   'False
    MinButton       =   0   'False
@@ -25,7 +25,7 @@ Begin VB.Form sema4About
       ForeColor       =   &H80000008&
       Height          =   675
       Left            =   120
-      Picture         =   "sema4About.frx":00EA
+      Picture         =   "sema4about.frx":00EA
       ScaleHeight     =   474.075
       ScaleMode       =   0  'User
       ScaleWidth      =   1053.5
@@ -105,5 +105,5 @@ Private Sub Form_Load()
     lblTitle.Caption = App.Title
     lblDescription = App.Comments & vbCrLf & vbCrLf & _
                      "Original Mike Bolton 2005" & vbCrLf & _
-                     "Modified Chris White, Mark Patrick 2008-2009"
+                     "Modified Chris White, Mark Patrick 2008-2010"
 End Sub
