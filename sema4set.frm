@@ -788,7 +788,7 @@ Const DEFAULT_SETTING As Integer = 127
 ' Transmitted command characters
 Const SYNCH_BYTE    As Integer = 0  ' ASCII null
 Const SETTING_BASE  As Integer = 65 ' ASCII A
-Const TRVL_SETTING  As Integer = SETTING_BASE + SEMA4_SETTINGS
+Const TRVL_SETTING  As Integer = 56
 Const STORE_COMMAND As String = "@"
 Const RESET_COMMAND As String = "#"
 Const RUN_COMMAND   As String = "$"
@@ -972,6 +972,26 @@ servoSettingOption(settingIndex).Value = True
 
 End Sub
 
+Private Sub disableExtendedTravelSelections()
+
+xtndTravelSelection(0).Enabled = False
+xtndTravelSelection(1).Enabled = False
+xtndTravelSelection(2).Enabled = False
+xtndTravelSelection(3).Enabled = False
+xtndTravelSelectionGroup.Enabled = False
+
+End Sub
+
+Private Sub enableExtendedTravelSelections()
+
+xtndTravelSelectionGroup.Enabled = True
+xtndTravelSelection(0).Enabled = True
+xtndTravelSelection(1).Enabled = True
+xtndTravelSelection(2).Enabled = True
+xtndTravelSelection(3).Enabled = True
+
+End Sub
+
 Private Sub setExtendedTravelSelections(newOptions As Integer)
 
 If (0 <> (&H1 And newOptions)) Then
@@ -1082,6 +1102,9 @@ Select Case compatabilityText.Caption
         disableServo4CompatabilitySelection
     Case sema4bCompatabilityText
         disableSema4bCompatabilitySelection
+    Case sema4cCompatabilityText
+        disableSema4cCompatabilitySelection
+        enableExtendedTravelSelections
     Case Else
         disableSema4CompatabilitySelection
 End Select
@@ -1094,7 +1117,6 @@ resetButton.Enabled = False
 centerButton.Enabled = True
 valueScroller.Enabled = True
 valuetext.Enabled = True
-xtndTravelSelectionGroup.Enabled = True
 
 End Sub
 
@@ -1133,7 +1155,7 @@ If comPort.PortOpen Then
     valuetext.Enabled = False
 
     ' Disable changine of extended servo travel selections
-    xtndTravelSelectionGroup.Enabled = False
+    disableExtendedTravelSelections
 
 Else
     ' COM port not available so act just as an offline settings editor
@@ -1163,7 +1185,7 @@ valueScroller.Enabled = True
 valuetext.Enabled = True
 
 ' Enable changine of extended servo travel selections
-xtndTravelSelectionGroup.Enabled = True
+enableExtendedTravelSelections
 
 End Sub
 
@@ -1229,7 +1251,7 @@ Private Sub sendSetting(settingCommand As Integer, _
 ' a set number of times to allow for garbled reception as link has no handshake
 
 If (SETTING = currentMode) Then
-    sendCommand Chr(settingCommand), commandValue, sendItterations
+    sendCommand Chr(SETTING_BASE + settingCommand), commandValue, sendItterations
 End If
                         
 End Sub
@@ -1246,10 +1268,14 @@ For sendIndex = LBound(settingValue) To UBound(settingValue)
     ' Test if option button for setting is enabled
     If servoSettingOption(sendIndex).Enabled Then
         ' Send setting command and value
-        sendSetting (SETTING_BASE + settingCommand(sendIndex)), _
+        sendCommand Chr(SETTING_BASE + settingCommand(sendIndex)), _
                     settingValue(sendIndex)
     End If
 Next
+
+If compatabilityText.Caption = sema4cCompatabilityText Then
+    sendCommand Chr(SETTING_BASE + TRVL_SETTING), getExtendedTravelSelections
+End If
 
 If compatabilityText.Caption <> servo4CompatabilityText Then
     sendCommand (RUN_COMMAND) ' Ensure module leaves Set mode after download
@@ -1286,6 +1312,8 @@ For settingIndex = LBound(settingValue) To UBound(settingValue)
     settingValue(settingIndex) = DEFAULT_SETTING
     selectSetting settingIndex
 Next
+
+setExtendedTravelSelections 0
 
 ' Select first setting option control and display corresponding value
 selectSetting 0
@@ -1348,6 +1376,13 @@ Do Until (EOF(1) Or (UBound(settingValue) < settingIndex))
     settingIndex = 1 + settingIndex
 Loop
 
+If (Not EOF(1)) Then
+    Input #1, settingIndex
+    setExtendedTravelSelections settingIndex
+Else
+    setExtendedTravelSelections 0
+End If
+
 ' Close the settings file
 Close #1
 
@@ -1393,6 +1428,8 @@ Dim outputIndex As Integer
 For outputIndex = LBound(settingValue) To UBound(settingValue)
     Print #1, settingValue(outputIndex)
 Next
+
+Print #1, getExtendedTravelSelections
 
 ' Close the settings file
 Close #1
@@ -1470,7 +1507,6 @@ onBounce3Label.Enabled = False
 
 ' Disable the selection controls to select extended servo travel not supported by Servo4
 xtndTravelSelectionGroup.Visible = False
-xtndTravelSelectionGroup.Enabled = False
 xtndTravelLabel.Enabled = False
 
 ' Select first setting option control and display corresponding value
@@ -1522,6 +1558,10 @@ setSema4Compatabillity
 ' Difference is in commands used for certain values
 initialiseSema4bSettingCommands
 
+' Select first setting option control and display corresponding value
+selectSetting 0
+
+' Update compatability mode display
 compatabilityText.Caption = sema4bCompatabilityText
 
 disableSema4bCompatabilitySelection
@@ -1538,8 +1578,10 @@ xtndTravelSelectionGroup.Visible = True
 xtndTravelSelectionGroup.Enabled = True
 xtndTravelLabel.Enabled = True
 
-setExtendedTravelSelections (10)
+' Select first setting option control and display corresponding value
+selectSetting 0
 
+' Update compatability mode display
 compatabilityText.Caption = sema4cCompatabilityText
 
 disableSema4cCompatabilitySelection
@@ -1768,5 +1810,6 @@ End Sub
 Private Sub xtndTravelSelection_Click(Index As Integer)
 
 sendSetting TRVL_SETTING, getExtendedTravelSelections
+settingsChanged = True
 
 End Sub
