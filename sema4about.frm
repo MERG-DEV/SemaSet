@@ -105,5 +105,6 @@ Private Sub Form_Load()
     lblTitle.Caption = App.Title
     lblDescription = App.Comments & vbCrLf & vbCrLf & _
                      "Original Mike Bolton 2005" & vbCrLf & _
-                     "Modified Chris White, Mark Patrick 2008-2010"
+                     "Modified Chris White, Mark Patrick 2008-2011"
 End Sub
+
