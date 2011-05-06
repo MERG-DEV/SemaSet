@@ -1,0 +1,42 @@
+Compatability
+Format version
+Servo 1 Off Position
+Servo 1 On Position
+Servo 1 Off Speed
+Servo 1 On Speed
+Servo 2 Off Position
+Servo 2 On Position
+Servo 2 Off Speed
+Servo 2 On Speed
+Servo 3 Off Position
+Servo 3 On Position
+Servo 3 Off Speed
+Servo 3 On Speed
+Servo 4 Off Position
+Servo 4 On Position
+Servo 4 Off Speed
+Servo 4 On Speed
+Servo 1 Off Bounce 1
+Servo 1 Off Bounce 2
+Servo 1 Off Bounce 3
+Servo 1 On Bounce 1
+Servo 1 On Bounce 2
+Servo 1 On Bounce 3
+Servo 2 Off Bounce 1
+Servo 2 Off Bounce 2
+Servo 2 Off Bounce 3
+Servo 2 On Bounce 1
+Servo 2 On Bounce 2
+Servo 2 On Bounce 3
+Servo 3 Off Bounce 1
+Servo 3 Off Bounce 2
+Servo 3 Off Bounce 3
+Servo 3 On Bounce 1
+Servo 3 On Bounce 2
+Servo 3 On Bounce 3
+Servo 4 Off Bounce 1
+Servo 4 Off Bounce 2
+Servo 4 Off Bounce 3
+Servo 4 On Bounce 1
+Servo 4 On Bounce 2
+Servo 4 On Bounce 3

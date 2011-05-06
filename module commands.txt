@@ -1,0 +1,137 @@
+Commands are sent to the module as a sequence of five bytes:
+
+Null (00 hex) - Identifies start of a sequence
+Command
+Value - Three digit decimal value encoded as ASCII
+
+Value is sent as first the Hundreds digit, then the Tens digit, and last the Units digit.
+
+Not all commands need a value but one must be sent anyway as the module always expects five bytes in a sequence.
+
+A speed value of zero means the position output changes immediately so that the servo moves to the new position at its maximum speed.
+
+When the module receives a position command it will output the value so the servo moves immediately to that position. It then waits for a short timeout period before resuming normal operation in case a new position command is received. This is done to allow interactively setting the servo position values.
+
+
+Servo4 commands (hex value - ASCII character - description of command):
+
+23 - # - Read setting values from EEPROM (effectively reset and discard any changes)
+40 - @ - Write setting values to EEPROM
+
+41 - A - Servo1 Off Position
+42 - B - Servo1 On Position
+43 - C - Servo1 Off Speed
+44 - D - Servo1 On Speed
+
+45 - E - Servo2 Off Position
+46 - F - Servo2 On Position
+47 - G - Servo2 Off Speed
+48 - H - Servo2 On Speed
+
+49 - I - Servo3 Off Position
+4A - J - Servo3 On Position
+4B - K - Servo3 Off Speed
+4C - L - Servo3 On Speed
+
+4D - M - Servo4 Off Position
+4E - N - Servo4 On Position
+4F - O - Servo4 Off Speed
+50 - P - Servo4 On Speed
+
+
+Sema4 uses different commands to set the on and off positions as well as the bounce positions. For compatability it sets both the final and all three bounce positions to the same value when it receives a Servo4 position command.
+
+Sema4 commands (hex value - ASCII character - description of command):
+
+23 - # - Read setting values from EEPROM (effectively reset and discard any changes)
+24 - $ - Resume normal operation without waiting for position setting timeout to elapse
+40 - @ - Write setting values to EEPROM
+
+41 - A - Servo1 Off, Off Bounce 1, Off Bounce 2, Off Bounce 3 Positions
+42 - B - Servo1 On, On Bounce 1, On Bounce 2, On Bounce 3 Positions
+43 - C - Servo1 Off Speed
+44 - D - Servo1 On Speed
+
+45 - E - Servo2 Off, Off Bounce 1, Off Bounce 2, Off Bounce 3 Positions
+46 - F - Servo2 On, On Bounce 1, On Bounce 2, On Bounce 3 Positions
+47 - G - Servo2 Off Speed
+48 - H - Servo2 On Speed
+
+49 - I - Servo3 Off, Off Bounce 1, Off Bounce 2, Off Bounce 3 Positions
+4A - J - Servo3 On, On Bounce 1, On Bounce 2, On Bounce 3 Positions
+4B - K - Servo3 Off Speed
+4C - L - Servo3 On Speed
+
+4D - M - Servo4 Off, Off Bounce 1, Off Bounce 2, Off Bounce 3 Positions
+4E - N - Servo4 On, On Bounce 1, On Bounce 2, On Bounce 3 Positions
+4F - O - Servo4 Off Speed
+50 - P - Servo4 On Speed
+
+51 - Q - Servo1 Off Bounce 1 Position
+52 - R - Servo1 Off Bounce 2 Position
+53 - S - Servo1 Off Bounce 3 Position
+
+54 - T - Servo1 On Bounce 1 Position
+55 - U - Servo1 On Bounce 2 Position
+56 - V - Servo1 On Bounce 3 Position
+
+57 - W - Servo2 Off Bounce 1 Position
+58 - X - Servo2 Off Bounce 2 Position
+59 - Y - Servo2 Off Bounce 3 Position
+
+5A - Z - Servo2 On Bounce 1 Position
+5B - [ - Servo2 On Bounce 2 Position
+5C - \ - Servo2 On Bounce 3 Position
+
+5D - ] - Servo3 Off Bounce 1 Position
+5E - ^ - Servo3 Off Bounce 2 Position
+5F - _ - Servo3 Off Bounce 3 Position
+
+60 - ` - Servo3 On Bounce 1 Position
+61 - a - Servo3 On Bounce 2 Position
+62 - b - Servo3 On Bounce 3 Position
+
+63 - c - Servo4 Off Bounce 1 Position
+64 - d - Servo4 Off Bounce 2 Position
+65 - e - Servo4 Off Bounce 3 Position
+
+66 - f - Servo4 On Bounce 1 Position
+67 - g - Servo4 On Bounce 2 Position
+68 - h - Servo4 On Bounce 3 Position
+
+69 - i - Servo1 Off Position
+6A - j - Servo1 On Position
+6B - k - Servo2 Off Position
+6C - l - Servo2 On Position
+6D - m - Servo3 Off Position
+6E - n - Servo3 On Position
+6F - o - Servo4 Off Position
+70 - p - Servo4 On Position
+
+
+An oversight with Sema4 was that the speed calculation is done differently meaning it wasn't compatible with Servo4 speed values. This was fixed in Sema4b but the fix needed a separate set of Sema4b speed commands. Any command not listed below is as for Sema4 above.
+
+Sema4b commands (hex value - ASCII character - description of command):
+
+43 - C - Servo1 Off Speed (Servo4 compatible)
+44 - D - Servo1 On Speed (Servo4 compatible)
+47 - G - Servo2 Off Speed (Servo4 compatible)
+48 - H - Servo2 On Speed (Servo4 compatible)
+4B - K - Servo3 Off Speed (Servo4 compatible)
+4C - L - Servo3 On Speed (Servo4 compatible)
+4F - O - Servo4 Off Speed (Servo4 compatible)
+50 - P - Servo4 On Speed (Servo4 compatible)
+
+71 - q - Servo1 Off Speed (Sema4 compatible)
+72 - r - Servo1 On Speed (Sema4 compatible)
+73 - s - Servo2 Off Speed (Sema4 compatible)
+74 - t - Servo2 On Speed (Sema4 compatible)
+75 - u - Servo3 Off Speed (Sema4 compatible)
+76 - v - Servo3 On Speed (Sema4 compatible)
+77 - w - Servo4 Off Speed (Sema4 compatible)
+78 - x - Servo4 On Speed (Sema4 compatible)
+
+
+Sema4c involved addition of the drive shutoff option and a change to the cycle and pulse timing. This enabled the adding of selection of normal (1 - 2 mSec) or extended travel (0.5 - 2.5 mSec) pulse duration. This has required one additional command:
+
+79 - y - Extended travel pulse selections
