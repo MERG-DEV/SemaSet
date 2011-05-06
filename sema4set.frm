@@ -1319,6 +1319,7 @@ setExtendedTravelSelections 0
 selectSetting 0
 
 settingsChanged = False
+sema4SetForm.Caption = ""
 
 End Sub
 
@@ -1390,6 +1391,9 @@ Close #1
 selectSetting 0
 
 settingsChanged = False
+sema4SetForm.Caption = Right(settingsFilename, _
+                             (Len(settingsFilename) - InStrRev(settingsFilename, _
+                                                               "\")))
 
 errorCancelLoad:
 
@@ -1410,6 +1414,7 @@ End If
 
 If "" = settingsFilename Then
     MsgBox "Filename blank, settings not saved", vbOKOnly, "No filename"
+    GoTo errorCancel
 End If
 
 sema4SetForm.MousePointer = vbHourglass
@@ -1435,6 +1440,9 @@ Print #1, getExtendedTravelSelections
 Close #1
 
 settingsChanged = False
+sema4SetForm.Caption = Right(settingsFilename, _
+                             (Len(settingsFilename) - InStrRev(settingsFilename, _
+                                                               "\")))
 
 errorCancel:
 
