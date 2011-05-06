@@ -785,6 +785,12 @@ Const SEND_ITTERATIONS As Integer = 15
 ' Default value to assign to new setting value
 Const DEFAULT_SETTING As Integer = 127
 
+' Extended travel options byte bitmasks
+Const SRV1_XTND_MASK As Integer = &H4
+Const SRV2_XTND_MASK As Integer = &H8
+Const SRV3_XTND_MASK As Integer = &H40
+Const SRV4_XTND_MASK As Integer = &H80
+
 ' Transmitted command characters
 Const SYNCH_BYTE    As Integer = 0  ' ASCII null
 Const SETTING_BASE  As Integer = 65 ' ASCII A
@@ -994,25 +1000,25 @@ End Sub
 
 Private Sub setExtendedTravelSelections(newOptions As Integer)
 
-If (0 <> (&H1 And newOptions)) Then
+If (0 <> (SRV1_XTND_MASK And newOptions)) Then
     xtndTravelSelection(0).Value = vbChecked
 Else
     xtndTravelSelection(0).Value = vbUnchecked
 End If
 
-If (0 <> (&H2 And newOptions)) Then
+If (0 <> (SRV2_XTND_MASK And newOptions)) Then
     xtndTravelSelection(1).Value = vbChecked
 Else
     xtndTravelSelection(1).Value = vbUnchecked
 End If
 
-If (0 <> (&H4 And newOptions)) Then
+If (0 <> (SRV3_XTND_MASK And newOptions)) Then
     xtndTravelSelection(2).Value = vbChecked
 Else
     xtndTravelSelection(2).Value = vbUnchecked
 End If
 
-If (0 <> (&H8 And newOptions)) Then
+If (0 <> (SRV4_XTND_MASK And newOptions)) Then
     xtndTravelSelection(3).Value = vbChecked
 Else
     xtndTravelSelection(3).Value = vbUnchecked
@@ -1025,19 +1031,19 @@ Private Function getExtendedTravelSelections() As Integer
 getExtendedTravelSelections = 0
 
 If (vbChecked = xtndTravelSelection(0).Value) Then
-    getExtendedTravelSelections = (&H1 Or getExtendedTravelSelections)
+    getExtendedTravelSelections = (SRV1_XTND_MASK Or getExtendedTravelSelections)
 End If
 
 If (vbChecked = xtndTravelSelection(1).Value) Then
-    getExtendedTravelSelections = (&H2 Or getExtendedTravelSelections)
+    getExtendedTravelSelections = (SRV2_XTND_MASK Or getExtendedTravelSelections)
 End If
 
 If (vbChecked = xtndTravelSelection(2).Value) Then
-    getExtendedTravelSelections = (&H4 Or getExtendedTravelSelections)
+    getExtendedTravelSelections = (SRV3_XTND_MASK Or getExtendedTravelSelections)
 End If
 
 If (vbChecked = xtndTravelSelection(3).Value) Then
-    getExtendedTravelSelections = (&H8 Or getExtendedTravelSelections)
+    getExtendedTravelSelections = (SRV4_XTND_MASK Or getExtendedTravelSelections)
 End If
 
 End Function
