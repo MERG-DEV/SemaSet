@@ -2,7 +2,7 @@ Commands are sent to the module as a sequence of five bytes:
 
 Null (00 hex) - Identifies start of a sequence
 Command
-Value - Three digit decimal value encoded as ASCII
+Value - Three digit decimal value (0 to 255) encoded as ASCII
 
 Value is sent as first the Hundreds digit, then the Tens digit, and last the Units digit.
 
@@ -135,3 +135,9 @@ Sema4b commands (hex value - ASCII character - description of command):
 Sema4c involved addition of the drive shutoff option and a change to the cycle and pulse timing. This enabled the adding of selection of normal (1 - 2 mSec) or extended travel (0.5 - 2.5 mSec) pulse duration. This has required one additional command:
 
 79 - y - Extended travel pulse selections
+    The value sent with this command is a decimal number representing a single
+    byte bit field as follows:
+        bit 7 - Servo 4 extended travel selected
+        bit 6 - Servo 3 extended travel selected
+        bit 3 - Servo 2 extended travel selected
+        bit 2 - Servo 1 extended travel selected
