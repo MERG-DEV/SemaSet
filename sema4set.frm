@@ -1030,20 +1030,22 @@ Private Function getExtendedTravelSelections() As Integer
 
 getExtendedTravelSelections = 0
 
-If (vbChecked = xtndTravelSelection(0).Value) Then
-    getExtendedTravelSelections = (SRV1_XTND_MASK Or getExtendedTravelSelections)
-End If
-
-If (vbChecked = xtndTravelSelection(1).Value) Then
-    getExtendedTravelSelections = (SRV2_XTND_MASK Or getExtendedTravelSelections)
-End If
-
-If (vbChecked = xtndTravelSelection(2).Value) Then
-    getExtendedTravelSelections = (SRV3_XTND_MASK Or getExtendedTravelSelections)
-End If
-
-If (vbChecked = xtndTravelSelection(3).Value) Then
-    getExtendedTravelSelections = (SRV4_XTND_MASK Or getExtendedTravelSelections)
+If (xtndTravelSelectionGroup.Enabled) Then
+    If (vbChecked = xtndTravelSelection(0).Value) Then
+        getExtendedTravelSelections = (SRV1_XTND_MASK Or getExtendedTravelSelections)
+    End If
+    
+    If (vbChecked = xtndTravelSelection(1).Value) Then
+        getExtendedTravelSelections = (SRV2_XTND_MASK Or getExtendedTravelSelections)
+    End If
+    
+    If (vbChecked = xtndTravelSelection(2).Value) Then
+        getExtendedTravelSelections = (SRV3_XTND_MASK Or getExtendedTravelSelections)
+    End If
+    
+    If (vbChecked = xtndTravelSelection(3).Value) Then
+        getExtendedTravelSelections = (SRV4_XTND_MASK Or getExtendedTravelSelections)
+    End If
 End If
 
 End Function
