@@ -780,7 +780,7 @@ Const SEMA_SETTINGS  As Integer = 6
 Const SEMA4_SETTINGS  As Integer = 4 * (SEMA_SETTINGS + SERVO_SETTINGS)
 
 ' Number of times to send a non streaming command or setting string
-Const SEND_ITTERATIONS As Integer = 15
+Const SEND_ITTERATIONS As Integer = 5
 
 ' Default value to assign to new setting value
 Const DEFAULT_SETTING As Integer = 127
@@ -943,6 +943,7 @@ If newValue <> settingValue(settingIndex) Then
     settingValue(settingIndex) = newValue
     valueScroller.Value = newValue
     valuetext.Text = newValue
+    sendCurrentSetting
     settingsChanged = True
 End If
 
@@ -1214,6 +1215,33 @@ If comPort.PortOpen Then
                          + Chr(SETTING_BASE + settingCommand(settingIndex)) _
                          + Format(settingValue(settingIndex), "000")
     Wend
+End If
+
+Exit Sub
+
+comPortFailure:
+    comPortFailed
+
+End Sub
+
+Private Sub sendCurrentSetting()
+
+Dim n As Integer
+
+' Continuosly send the currently selected setting value so the module tracks
+' changes interactively
+
+If comPort.PortOpen Then
+    On Error GoTo comPortFailure
+
+    If (SETTING = currentMode) Then
+        For n = 1 To SEND_ITTERATIONS
+            ' Send setting command and value for currently selected setting
+            comPort.Output = Chr(SYNCH_BYTE) _
+                             + Chr(SETTING_BASE + settingCommand(settingIndex)) _
+                             + Format(settingValue(settingIndex), "000")
+        Next
+    End If
 End If
 
 Exit Sub
