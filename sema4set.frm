@@ -377,7 +377,7 @@ Begin VB.Form sema4SetForm
       End
    End
    Begin VB.CommandButton setButton 
-      Caption         =   "&Set"
+      Caption         =   "S&et"
       Height          =   375
       Left            =   3000
       TabIndex        =   5
@@ -514,7 +514,7 @@ Begin VB.Form sema4SetForm
       Alignment       =   1  'Right Justify
       BackColor       =   &H8000000E&
       BackStyle       =   0  'Transparent
-      Caption         =   "Sema4"
+      Caption         =   "Sema4d"
       BeginProperty Font 
          Name            =   "MS Sans Serif"
          Size            =   8.25
@@ -695,14 +695,14 @@ Begin VB.Form sema4SetForm
       Width           =   450
    End
    Begin VB.Menu fileMenu 
-      Caption         =   "&File"
+      Caption         =   "&Settings"
       Begin VB.Menu fileNewMenuItem 
          Caption         =   "&New"
          Shortcut        =   ^N
       End
       Begin VB.Menu fileOpenMenuItem 
-         Caption         =   "&Open"
-         Shortcut        =   ^O
+         Caption         =   "&Load"
+         Shortcut        =   ^L
       End
       Begin VB.Menu fileSaveMenuItem 
          Caption         =   "&Save"
@@ -755,20 +755,27 @@ Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 Option Explicit
 
-Private Enum OperatingMode
-    RUNNING
-    SETTING
-    OFFLINE
-End Enum
-
 ' Key code to indicate completion of direct value input to valueText TextBox
 Const RTN_KEYCODE As Integer = 13
 
-' Settings file format version
-Const SETTINGS_FILE_FORMAT_VERSION As Integer = 0
-
 ' Maximum speed for Servo4
 Const SERVO4_MAX_SPEED As Integer = 7
+
+' Compatability names
+Const servo4Text As String = "Servo4"
+Const sema4Text  As String = "Sema4"
+Const sema4bText As String = "Sema4b"
+Const sema4cText As String = "Sema4c"
+Const sema4dText As String = "Sema4d"
+
+' Extended travel options byte bitmasks
+Const SRV1_XTND_MASK As Integer = &H4
+Const SRV2_XTND_MASK As Integer = &H8
+Const SRV3_XTND_MASK As Integer = &H40
+Const SRV4_XTND_MASK As Integer = &H80
+
+' Default value to assign to new setting value
+Const DEFAULT_SETTING As Integer = 127
 
 ' Number of setting values for Servo (on and off, speed and position)
 Const SERVO_SETTINGS As Integer = 4
@@ -781,33 +788,6 @@ Const SEMA_SETTINGS  As Integer = 6
 
 ' Number of setting values for Sema4
 Const SEMA4_SETTINGS  As Integer = 4 * (SEMA_SETTINGS + SERVO_SETTINGS)
-
-' Number of times to send a non streaming command or setting string
-Const SEND_ITTERATIONS As Integer = 5
-
-' Default value to assign to new setting value
-Const DEFAULT_SETTING As Integer = 127
-
-' Extended travel options byte bitmasks
-Const SRV1_XTND_MASK As Integer = &H4
-Const SRV2_XTND_MASK As Integer = &H8
-Const SRV3_XTND_MASK As Integer = &H40
-Const SRV4_XTND_MASK As Integer = &H80
-
-' Transmitted command characters
-Const SYNCH_BYTE    As Integer = 0  ' ASCII null
-Const SETTING_BASE  As Integer = 65 ' ASCII A
-Const TRVL_SETTING  As Integer = 56
-Const STORE_COMMAND As String = "@"
-Const RESET_COMMAND As String = "#"
-Const RUN_COMMAND   As String = "$"
-
-' Compatability names
-Const servo4CompatabilityText As String = "Servo4"
-Const sema4CompatabilityText  As String = "Sema4"
-Const sema4bCompatabilityText As String = "Sema4b"
-Const sema4cCompatabilityText As String = "Sema4c"
-Const sema4dCompatabilityText As String = "Sema4d"
 
 ' Arrays for setting values and commands, layout:
 '  Servo 1
@@ -855,43 +835,44 @@ Const ON_SPD_NDX_4   As Integer = 15
 Dim settingIndex    As Integer
 Dim settingsChanged As Boolean
 
+' Settings file format version
+Const SETTINGS_FILE_FORMAT_VERSION As Integer = 0
+
 Dim settingsFilename As String
+
+Private Enum OperatingMode
+    RUNNING
+    SETTING
+    OFFLINE
+End Enum
 
 Dim currentMode As OperatingMode
 
-Private Sub openComPort(newComPortNumber As Integer)
+' Number of times to send a non streaming command or setting string
+Const SEND_ITTERATIONS As Integer = 5
 
-On Error GoTo commerror
+' Transmitted command characters
+Const SYNCH_BYTE    As Integer = 0  ' ASCII null
+Const SETTING_BASE  As Integer = 65 ' ASCII A
+Const TRVL_SETTING  As Integer = 56
+Const STORE_COMMAND As String = "@"
+Const RESET_COMMAND As String = "#"
+Const RUN_COMMAND   As String = "$"
+
+Private Sub selectComPort(oldComPortNumber As Integer)
+
+On Error GoTo commError
 
 ' If COM port currently open close it
 If True = comPort.PortOpen Then
     comPort.PortOpen = False
 End If
 
-' Set new COM port number and open COM port
-comPort.CommPort = newComPortNumber
-
-comPort.PortOpen = True
-
-Exit Sub
-
-commerror:
-
-MsgBox "Unable to open the selected COM Port. Please choose another port.", _
-       vbExclamation, _
-       "COM Port Error"
-
-End
-
-End Sub
-
-Public Sub selectComPort(oldComPortNumber As Integer)
-
 Dim newComPortName As String
 Dim newComPortNumber As Integer
 
 ' Prompt user to select COM port for connection
-newComPortName = InputBox("Select COM Port", _
+newComPortName = InputBox("Select COM Port (0 for Offline editing)", _
                           "COM Port number", _
                           oldComPortNumber)
 
@@ -900,23 +881,28 @@ newComPortNumber = CInt(Val(newComPortName))
 
 ' Ensure COM port number is greater than 0
 If (1 > newComPortNumber) Then
-    If True = comPort.PortOpen Then
-        comPort.PortOpen = False
-    End If
-    connectionText.Caption = "Offline"
-    setOffline
+    GoTo commOffline
 Else
-    connectionText.Caption = "COM" + newComPortName
-    openComPort (newComPortNumber)
+    ' Set new COM port number and open COM port
+    comPort.CommPort = newComPortNumber
+    comPort.PortOpen = True
 
+    connectionText.Caption = "COM" + newComPortName
     setRunningMode
 End If
 
-End Sub
+Exit Sub
 
-Private Sub changeComPort()
+commError:
 
-selectComPort comPort.CommPort
+MsgBox "Unable to open the selected COM Port. Please choose another port.", _
+       vbExclamation, _
+       "COM Port Error"
+
+commOffline:
+
+connectionText.Caption = "Offline"
+setOffline
 
 End Sub
 
@@ -924,7 +910,100 @@ Private Sub comPortFailed()
 
 MsgBox "Error accessing COM port, " + Error, vbOKOnly, "COM Port Error"
 
-changeComPort
+selectComPort comPort.CommPort
+
+End Sub
+
+Private Sub sendCommand(commandCharacter As String, _
+                        Optional commandValue As Integer = 0, _
+                        Optional sendItterations As Integer = SEND_ITTERATIONS)
+' Send the given command, and optionally a value for the command, repeatedly
+' a set number of times to allow for garbled reception as link has no handshake
+
+Dim n As Integer
+
+On Error GoTo comPortFailure
+
+For n = 1 To sendItterations
+    ' Perform event dispatch to keep GUI alive
+    DoEvents
+
+    If comPort.PortOpen Then
+        ' Send command and value
+        comPort.Output = Chr(SYNCH_BYTE) _
+                         + commandCharacter _
+                         + Format(commandValue, "000")
+    End If
+Next
+
+Exit Sub
+
+comPortFailure:
+    comPortFailed
+
+End Sub
+
+Private Sub sendSettingCommand(settingCommand As Integer, _
+                               Optional commandValue As Integer = 0)
+
+sendCommand Chr(SETTING_BASE + settingCommand), commandValue
+                        
+End Sub
+
+Private Sub sendSetting(settingCommand As Integer, _
+                        Optional commandValue As Integer = 0)
+
+If (SETTING = currentMode) Then
+    sendSettingCommand settingCommand, commandValue
+End If
+                        
+End Sub
+
+Private Sub sendCurrentSetting()
+
+sendSetting settingCommand(settingIndex), settingValue(settingIndex)
+
+End Sub
+
+Private Sub streamCurrentSetting()
+' Continuosly send the currently selected setting value so the module tracks
+' changes interactively
+
+While (SETTING = currentMode)
+    ' Send setting command and value for currently selected setting
+    sendSettingCommand settingCommand(settingIndex), _
+                       settingValue(settingIndex)
+Wend
+
+End Sub
+
+Private Sub sendCurrentSettings()
+' Download all the current settings
+
+sema4SetForm.MousePointer = vbHourglass
+
+Dim sendIndex As Integer
+
+' Walk the array of setting values
+For sendIndex = LBound(settingCommand) To UBound(settingCommand)
+    ' Test if option button for setting is enabled
+    If servoSettingOption(sendIndex).Enabled Then
+        ' Send setting command and value
+        sendSettingCommand settingCommand(sendIndex), settingValue(sendIndex)
+    End If
+Next
+
+If compatabilityText.Caption = sema4cText Or _
+   compatabilityText.Caption = sema4dText Then
+    sendSettingCommand TRVL_SETTING, getExtendedTravelSelections
+End If
+
+If compatabilityText.Caption <> servo4Text Then
+    ' Ensure module leaves Set mode after download
+    sendCommand RUN_COMMAND
+End If
+
+sema4SetForm.MousePointer = vbDefault
 
 End Sub
 
@@ -966,7 +1045,7 @@ Case ON_SPD_NDX_1, OFF_SPD_NDX_1, ON_SPD_NDX_2, OFF_SPD_NDX_2, _
      ON_SPD_NDX_3, OFF_SPD_NDX_3, ON_SPD_NDX_4, OFF_SPD_NDX_4
     
     ' Selected setting is a speed
-    If compatabilityText.Caption = servo4CompatabilityText Then
+    If compatabilityText.Caption = servo4Text Then
         ' Compatability mode is Servo4, limit maximum speed
         valueScroller.Max = SERVO4_MAX_SPEED
         valueScroller.LargeChange = 1
@@ -980,26 +1059,6 @@ valueScroller.Value = settingValue(settingIndex)
 valuetext.Text = settingValue(settingIndex)
 
 servoSettingOption(settingIndex).Value = True
-
-End Sub
-
-Private Sub disableExtendedTravelSelections()
-
-xtndTravelSelection(0).Enabled = False
-xtndTravelSelection(1).Enabled = False
-xtndTravelSelection(2).Enabled = False
-xtndTravelSelection(3).Enabled = False
-xtndTravelSelectionGroup.Enabled = False
-
-End Sub
-
-Private Sub enableExtendedTravelSelections()
-
-xtndTravelSelectionGroup.Enabled = True
-xtndTravelSelection(0).Enabled = True
-xtndTravelSelection(1).Enabled = True
-xtndTravelSelection(2).Enabled = True
-xtndTravelSelection(3).Enabled = True
 
 End Sub
 
@@ -1037,303 +1096,27 @@ getExtendedTravelSelections = 0
 
 If (xtndTravelSelectionGroup.Enabled) Then
     If (vbChecked = xtndTravelSelection(0).Value) Then
-        getExtendedTravelSelections = (SRV1_XTND_MASK Or getExtendedTravelSelections)
+        getExtendedTravelSelections = (SRV1_XTND_MASK Or _
+                                       getExtendedTravelSelections)
     End If
     
     If (vbChecked = xtndTravelSelection(1).Value) Then
-        getExtendedTravelSelections = (SRV2_XTND_MASK Or getExtendedTravelSelections)
+        getExtendedTravelSelections = (SRV2_XTND_MASK Or _
+                                       getExtendedTravelSelections)
     End If
     
     If (vbChecked = xtndTravelSelection(2).Value) Then
-        getExtendedTravelSelections = (SRV3_XTND_MASK Or getExtendedTravelSelections)
+        getExtendedTravelSelections = (SRV3_XTND_MASK Or _
+                                       getExtendedTravelSelections)
     End If
     
     If (vbChecked = xtndTravelSelection(3).Value) Then
-        getExtendedTravelSelections = (SRV4_XTND_MASK Or getExtendedTravelSelections)
+        getExtendedTravelSelections = (SRV4_XTND_MASK Or _
+                                       getExtendedTravelSelections)
     End If
 End If
 
 End Function
-
-Private Sub disableAllCompatabilitySelections()
-
-    optCompatServo4MenuItem.Enabled = False
-    optCompatSema4MenuItem.Enabled = False
-    optCompatSema4bMenuItem.Enabled = False
-    optCompatSema4cMenuItem.Enabled = False
-    optCompatSema4dMenuItem.Enabled = False
-
-End Sub
-
-Private Sub enableAllCompatabilitySelections()
-
-    optCompatServo4MenuItem.Enabled = True
-    optCompatSema4MenuItem.Enabled = True
-    optCompatSema4bMenuItem.Enabled = True
-    optCompatSema4cMenuItem.Enabled = True
-    optCompatSema4dMenuItem.Enabled = True
-
-End Sub
-
-Private Sub disableServo4CompatabilitySelection()
-
-    ' Allow change of compatability selection, excluding Servo4
-    enableAllCompatabilitySelections
-    optCompatServo4MenuItem.Enabled = False
-
-End Sub
-
-Private Sub disableSema4dCompatabilitySelection()
-
-    ' Allow change of compatability selection, excluding Sema4d
-    enableAllCompatabilitySelections
-    optCompatSema4dMenuItem.Enabled = False
-
-End Sub
-
-Private Sub disableSema4cCompatabilitySelection()
-
-    ' Allow change of compatability selection, excluding Sema4c
-    enableAllCompatabilitySelections
-    optCompatSema4cMenuItem.Enabled = False
-
-End Sub
-
-Private Sub disableSema4bCompatabilitySelection()
-
-    ' Allow change of compatability selection, excluding Sema4b
-    enableAllCompatabilitySelections
-    optCompatSema4bMenuItem.Enabled = False
-
-End Sub
-
-Private Sub disableSema4CompatabilitySelection()
-
-    ' Allow change of compatability selection, excluding Sema4
-    enableAllCompatabilitySelections
-    optCompatSema4MenuItem.Enabled = False
-
-End Sub
-
-Private Sub setOffline()
-
-currentMode = OFFLINE
-
-' Allow change of compatability selection, excluding that currently selected
-Select Case compatabilityText.Caption
-    Case servo4CompatabilityText
-        disableServo4CompatabilitySelection
-    Case sema4bCompatabilityText
-        disableSema4bCompatabilitySelection
-    Case sema4cCompatabilityText
-        disableSema4cCompatabilitySelection
-        enableExtendedTravelSelections
-    Case Else
-        disableSema4CompatabilitySelection
-End Select
-
-setallButton.Enabled = False
-runButton.Enabled = False
-setButton.Enabled = False
-storeButton.Enabled = False
-resetButton.Enabled = False
-centerButton.Enabled = True
-valueScroller.Enabled = True
-valuetext.Enabled = True
-
-End Sub
-
-Private Sub setRunningMode()
-
-currentMode = RUNNING
-
-If comPort.PortOpen Then
-    ' Enable appropriate Compatability selection
-    Select Case compatabilityText.Caption
-        Case servo4CompatabilityText
-            disableServo4CompatabilitySelection
-        Case sema4bCompatabilityText
-            disableSema4bCompatabilitySelection
-            sendCommand (RUN_COMMAND) ' Ensure module is not in Set mode
-        Case sema4cCompatabilityText
-            disableSema4cCompatabilitySelection
-            sendCommand (RUN_COMMAND) ' Ensure module is not in Set mode
-        Case Else
-            disableSema4CompatabilitySelection
-            sendCommand (RUN_COMMAND) ' Ensure module is not in Set mode
-    End Select
-
-    ' Disable selection of Run mode, enable selection of Set mode
-    runButton.Enabled = False
-    setButton.Enabled = True
-
-    ' Enable sending of commands to Send, Store, and Reset settings
-    setallButton.Enabled = True
-    storeButton.Enabled = True
-    resetButton.Enabled = True
-
-    ' Disable changine of setting value
-    centerButton.Enabled = False
-    valueScroller.Enabled = False
-    valuetext.Enabled = False
-
-    ' Disable changine of extended servo travel selections
-    disableExtendedTravelSelections
-
-Else
-    ' COM port not available so act just as an offline settings editor
-    setOffline
-End If
-
-End Sub
-
-Private Sub setSettingMode()
-
-currentMode = SETTING
-
-disableAllCompatabilitySelections
-
-' Enable selection of Run mode, disable selection of Set mode
-runButton.Enabled = True
-setButton.Enabled = False
-
-' Disable sending of commands to Send, Store, and Reset settings
-setallButton.Enabled = False
-storeButton.Enabled = False
-resetButton.Enabled = False
-
-' Enable changine of setting value
-centerButton.Enabled = True
-valueScroller.Enabled = True
-valuetext.Enabled = True
-
-' Enable changine of extended servo travel selections
-enableExtendedTravelSelections
-
-End Sub
-
-Private Sub streamCurrentSetting()
-' Continuosly send the currently selected setting value so the module tracks
-' changes interactively
-
-If comPort.PortOpen Then
-    On Error GoTo comPortFailure
-
-    While (SETTING = currentMode)
-        ' Perform event dispatch to keep GUI alive,
-        ' allows currentMode to be changed
-        DoEvents
-
-        ' Send setting command and value for currently selected setting
-        comPort.Output = Chr(SYNCH_BYTE) _
-                         + Chr(SETTING_BASE + settingCommand(settingIndex)) _
-                         + Format(settingValue(settingIndex), "000")
-    Wend
-End If
-
-Exit Sub
-
-comPortFailure:
-    comPortFailed
-
-End Sub
-
-Private Sub sendCurrentSetting()
-
-Dim n As Integer
-
-' Send the currently selected setting value
-
-If comPort.PortOpen Then
-    On Error GoTo comPortFailure
-
-    If (SETTING = currentMode) Then
-        For n = 1 To SEND_ITTERATIONS
-            ' Send setting command and value for currently selected setting
-            comPort.Output = Chr(SYNCH_BYTE) _
-                             + Chr(SETTING_BASE + settingCommand(settingIndex)) _
-                             + Format(settingValue(settingIndex), "000")
-        Next
-    End If
-End If
-
-Exit Sub
-
-comPortFailure:
-    comPortFailed
-
-End Sub
-
-Private Sub sendCommand(commandCharacter As String, _
-                        Optional commandValue As Integer = 0, _
-                        Optional sendItterations As Integer = SEND_ITTERATIONS)
-' Send the given command, and optionally a value for the command, repeatedly
-' a set number of times to allow for garbled reception as link has no handshake
-
-Dim n As Integer
-
-If comPort.PortOpen Then
-    On Error GoTo comPortFailure
-
-    For n = 1 To sendItterations
-        ' Perform event dispatch to keep GUI alive
-        DoEvents
-
-        ' Send command and value
-        comPort.Output = Chr(SYNCH_BYTE) _
-                         + commandCharacter _
-                         + Format(commandValue, "000")
-    Next
-End If
-
-Exit Sub
-
-comPortFailure:
-    comPortFailed
-
-End Sub
-
-Private Sub sendSetting(settingCommand As Integer, _
-                        Optional commandValue As Integer = 0, _
-                        Optional sendItterations As Integer = SEND_ITTERATIONS)
-' Send the command for a setting, and optionally a value for the command, repeatedly
-' a set number of times to allow for garbled reception as link has no handshake
-
-If (SETTING = currentMode) Then
-    sendCommand Chr(SETTING_BASE + settingCommand), commandValue, sendItterations
-End If
-                        
-End Sub
-
-Private Sub sendCurrentSettings()
-' Download all the current settings
-
-sema4SetForm.MousePointer = vbHourglass
-
-Dim sendIndex As Integer
-
-' Walk the array of setting values
-For sendIndex = LBound(settingCommand) To UBound(settingCommand)
-    ' Test if option button for setting is enabled
-    If servoSettingOption(sendIndex).Enabled Then
-        ' Send setting command and value
-        sendCommand Chr(SETTING_BASE + settingCommand(sendIndex)), _
-                    settingValue(sendIndex)
-    End If
-Next
-
-If compatabilityText.Caption = sema4cCompatabilityText Or _
-   compatabilityText.Caption = sema4dCompatabilityText Then
-    sendCommand Chr(SETTING_BASE + TRVL_SETTING), getExtendedTravelSelections
-End If
-
-If compatabilityText.Caption <> servo4CompatabilityText Then
-    sendCommand (RUN_COMMAND) ' Ensure module leaves Set mode after download
-End If
-
-sema4SetForm.MousePointer = vbDefault
-
-End Sub
 
 Private Sub checkIfSaveNeeded(Optional beforeAction As String = "overwriting")
 ' Check if any settings have been changed and if so offer a chance to save
@@ -1353,6 +1136,7 @@ Private Sub newSettings()
 ' After checking if current settings need saving change all settings to
 ' default values
 
+' Force into running mode to prevent loaded values being sent
 setRunningMode
 
 checkIfSaveNeeded
@@ -1365,6 +1149,10 @@ Next
 
 setExtendedTravelSelections 0
 
+If servo4Text = compatabilityText.Caption Then
+    convertSpeedToServo4
+End If
+
 ' Select first setting option control and display corresponding value
 selectSetting 0
 
@@ -1376,6 +1164,7 @@ End Sub
 Private Sub loadSettings()
 ' After checking if current settings need saving load all settings from file
 
+' Force into running mode to prevent loaded values being sent
 setRunningMode
 
 checkIfSaveNeeded
@@ -1400,20 +1189,18 @@ Dim loadedCompatabilityText As String
 
 Input #1, loadedCompatabilityText
 
-If loadedCompatabilityText <> compatabilityText.Caption Then
-    Select Case loadedCompatabilityText
-        Case sema4dCompatabilityText
-            setSema4dCompatabillity
-        Case sema4cCompatabilityText
-            setSema4cCompatabillity
-        Case sema4bCompatabilityText
-            setSema4bCompatabillity
-        Case sema4CompatabilityText
-            setSema4Compatabillity
-        Case Else
-            setServo4Compatabillity
-    End Select
-End If
+Select Case loadedCompatabilityText
+    Case sema4dText
+        setSema4dCompatabillity
+    Case sema4cText
+        setSema4cCompatabillity
+    Case sema4bText
+        setSema4bCompatabillity
+    Case sema4Text
+        setSema4Compatabillity
+    Case Else
+        setServo4Compatabillity
+End Select
 
 ' Check version of format for settings in file in order to support reading
 ' files written with previous versions of this program, do nothing at present
@@ -1443,9 +1230,10 @@ Close #1
 selectSetting 0
 
 settingsChanged = False
-sema4SetForm.Caption = Right(settingsFilename, _
-                             (Len(settingsFilename) - InStrRev(settingsFilename, _
-                                                               "\")))
+sema4SetForm.Caption = _
+    Right(settingsFilename, _
+    (Len(settingsFilename) - InStrRev(settingsFilename, _
+    "\")))
 
 errorCancelLoad:
 
@@ -1492,9 +1280,9 @@ Print #1, getExtendedTravelSelections
 Close #1
 
 settingsChanged = False
-sema4SetForm.Caption = Right(settingsFilename, _
-                             (Len(settingsFilename) - InStrRev(settingsFilename, _
-                                                               "\")))
+sema4SetForm.Caption = _
+    Right(settingsFilename, _
+          (Len(settingsFilename) - InStrRev(settingsFilename, "\")))
 
 errorCancel:
 
@@ -1545,11 +1333,15 @@ End Sub
 
 Private Sub setServo4Compatabillity()
 
-If sema4dCompatabilityText = compatabilityText.Caption Then
+If sema4dText = compatabilityText.Caption Then
     flipSpeeds
 End If
 
 convertSpeedToServo4
+
+' Update compatability mode display
+compatabilityText.Caption = servo4Text
+disableCurrentCompatabilitySelection
 
 initialiseServo4SettingCommands
 
@@ -1564,6 +1356,7 @@ For settingIndex = SERVO4_SETTINGS To (SEMA4_SETTINGS - 1)
     servoSettingOption(settingIndex).Visible = False
     servoSettingOption(settingIndex).Enabled = False
 Next
+
 offBounce3Label.Enabled = False
 offBounce2Label.Enabled = False
 offBounce1Label.Enabled = False
@@ -1571,17 +1364,12 @@ onBounce1Label.Enabled = False
 onBounce2Label.Enabled = False
 onBounce3Label.Enabled = False
 
-' Disable the selection controls to select extended servo travel not supported by Servo4
-xtndTravelSelectionGroup.Visible = False
-xtndTravelLabel.Enabled = False
+' Disable the selection controls to select extended servo travel not supported
+' by Servo4
+disableExtendedTravel
 
 ' Select first setting option control and display corresponding value
 selectSetting 0
-
-' Update compatability mode display
-compatabilityText.Caption = servo4CompatabilityText
-
-disableServo4CompatabilitySelection
 
 settingsChanged = True
 
@@ -1589,13 +1377,17 @@ End Sub
 
 Private Sub setSema4Compatabillity()
 
-If servo4CompatabilityText = compatabilityText.Caption Then
+If servo4Text = compatabilityText.Caption Then
     convertSpeedFromServo4
 End If
 
-If sema4dCompatabilityText = compatabilityText.Caption Then
+If sema4dText = compatabilityText.Caption Then
     flipSpeeds
 End If
+
+' Update compatability mode display
+compatabilityText.Caption = sema4Text
+disableCurrentCompatabilitySelection
 
 initialiseSema4SettingCommands
 
@@ -1604,6 +1396,7 @@ For settingIndex = 0 To (SEMA4_SETTINGS - 1)
     servoSettingOption(settingIndex).Visible = True
     servoSettingOption(settingIndex).Enabled = True
 Next
+
 offBounce3Label.Enabled = True
 offBounce2Label.Enabled = True
 offBounce1Label.Enabled = True
@@ -1611,18 +1404,12 @@ onBounce1Label.Enabled = True
 onBounce2Label.Enabled = True
 onBounce3Label.Enabled = True
 
-' Disable the selection controls to select extended servo travel not supported by Servo4
-xtndTravelSelectionGroup.Visible = False
-xtndTravelSelectionGroup.Enabled = False
-xtndTravelLabel.Enabled = False
+' Disable the selection controls to select extended servo travel not supported
+' by Sema4
+disableExtendedTravel
 
 ' Select first setting option control and display corresponding value
 selectSetting 0
-
-' Update compatability mode display
-compatabilityText.Caption = sema4CompatabilityText
-
-disableSema4CompatabilitySelection
 
 settingsChanged = True
 
@@ -1633,16 +1420,14 @@ Private Sub setSema4bCompatabillity()
 ' Sema4b is a derivative of Sema4
 setSema4Compatabillity
 
-' Difference is in commands used for certain values
+' Update compatability mode display
+compatabilityText.Caption = sema4bText
+disableCurrentCompatabilitySelection
+
 initialiseSema4bSettingCommands
 
 ' Select first setting option control and display corresponding value
 selectSetting 0
-
-' Update compatability mode display
-compatabilityText.Caption = sema4bCompatabilityText
-
-disableSema4bCompatabilitySelection
 
 End Sub
 
@@ -1651,19 +1436,16 @@ Private Sub setSema4cCompatabillity()
 ' Sema4c is a derivative of Sema4b
 setSema4bCompatabillity
 
+' Update compatability mode display
+compatabilityText.Caption = sema4cText
+disableCurrentCompatabilitySelection
+
 ' Enable the selection controls to select extended servo travel supported
-' by Servo4c
-xtndTravelSelectionGroup.Visible = True
-xtndTravelSelectionGroup.Enabled = True
-xtndTravelLabel.Enabled = True
+' by Sema4c
+enableExtendedTravel
 
 ' Select first setting option control and display corresponding value
 selectSetting 0
-
-' Update compatability mode display
-compatabilityText.Caption = sema4cCompatabilityText
-
-disableSema4cCompatabilitySelection
 
 End Sub
 
@@ -1672,28 +1454,45 @@ Private Sub setSema4dCompatabillity()
 ' Sema4d is a derivative of Sema4c
 setSema4cCompatabillity
 
+' Update compatability mode display
+compatabilityText.Caption = sema4dText
+disableCurrentCompatabilitySelection
+
 flipSpeeds
 
 ' Select first setting option control and display corresponding value
 selectSetting 0
 
-' Update compatability mode display
-compatabilityText.Caption = sema4dCompatabilityText
-
-disableSema4dCompatabilitySelection
-
 End Sub
+
+Private Function toServo4Speed(sema4Speed As Integer) As Integer
+
+toServo4Speed = 0
+
+If (0 < sema4Speed) Then
+    toServo4Speed = sema4Speed / 16
+
+    If (1 > toServo4Speed) Then
+        toServo4Speed = 1
+    End If
+
+    If (SERVO4_MAX_SPEED < toServo4Speed) Then
+        toServo4Speed = SERVO4_MAX_SPEED
+    End If
+End If
+
+End Function
 
 Private Sub convertSpeedToServo4()
 
-settingValue(OFF_SPD_NDX_1) = settingValue(OFF_SPD_NDX_1) / 16
-settingValue(ON_SPD_NDX_1) = settingValue(ON_SPD_NDX_1) / 16
-settingValue(OFF_SPD_NDX_2) = settingValue(OFF_SPD_NDX_2) / 16
-settingValue(ON_SPD_NDX_2) = settingValue(ON_SPD_NDX_2) / 16
-settingValue(OFF_SPD_NDX_3) = settingValue(OFF_SPD_NDX_3) / 16
-settingValue(ON_SPD_NDX_3) = settingValue(ON_SPD_NDX_3) / 16
-settingValue(OFF_SPD_NDX_4) = settingValue(OFF_SPD_NDX_4) / 16
-settingValue(ON_SPD_NDX_4) = settingValue(ON_SPD_NDX_4) / 16
+settingValue(OFF_SPD_NDX_1) = toServo4Speed(settingValue(OFF_SPD_NDX_1))
+settingValue(ON_SPD_NDX_1) = toServo4Speed(settingValue(ON_SPD_NDX_1))
+settingValue(OFF_SPD_NDX_2) = toServo4Speed(settingValue(OFF_SPD_NDX_2))
+settingValue(ON_SPD_NDX_2) = toServo4Speed(settingValue(ON_SPD_NDX_2))
+settingValue(OFF_SPD_NDX_3) = toServo4Speed(settingValue(OFF_SPD_NDX_3))
+settingValue(ON_SPD_NDX_3) = toServo4Speed(settingValue(ON_SPD_NDX_3))
+settingValue(OFF_SPD_NDX_4) = toServo4Speed(settingValue(OFF_SPD_NDX_4))
+settingValue(ON_SPD_NDX_4) = toServo4Speed(settingValue(ON_SPD_NDX_4))
 
 End Sub
 
@@ -1733,6 +1532,177 @@ settingValue(ON_SPD_NDX_4) = flipSpeed(settingValue(ON_SPD_NDX_4))
 
 End Sub
 
+Private Sub setOffline()
+
+currentMode = OFFLINE
+
+' Disable selection of Run or Set mode
+runButton.Enabled = False
+setButton.Enabled = False
+
+disableSendStoreReset
+enableChangingSettingValue
+disableCurrentCompatabilitySelection
+enableExtendedTravelSelections
+
+End Sub
+
+Private Sub setRunningMode()
+
+currentMode = RUNNING
+
+If comPort.PortOpen Then
+    If compatabilityText.Caption <> servo4Text Then
+        ' Ensure module is not in Set mode
+        sendCommand (RUN_COMMAND)
+    End If
+
+    ' Disable selection of Run mode, enable selection of Set mode
+    runButton.Enabled = False
+    setButton.Enabled = True
+
+    enableSendStoreReset
+    disableChangingSettingValue
+    disableCurrentCompatabilitySelection
+
+    ' Disable changine of extended servo travel selections
+    disableExtendedTravelSelections
+
+Else
+    ' COM port not available so act just as an offline settings editor
+    setOffline
+End If
+
+End Sub
+
+Private Sub setSettingMode()
+
+currentMode = SETTING
+
+runButton.Enabled = True
+setButton.Enabled = False
+
+disableSendStoreReset
+enableChangingSettingValue
+disableAllCompatabilitySelections
+enableExtendedTravelSelections
+
+End Sub
+
+Private Sub disableAllCompatabilitySelections()
+
+optCompatServo4MenuItem.Enabled = False
+optCompatSema4MenuItem.Enabled = False
+optCompatSema4bMenuItem.Enabled = False
+optCompatSema4cMenuItem.Enabled = False
+optCompatSema4dMenuItem.Enabled = False
+
+End Sub
+
+Private Sub enableAllCompatabilitySelections()
+
+optCompatServo4MenuItem.Enabled = True
+optCompatSema4MenuItem.Enabled = True
+optCompatSema4bMenuItem.Enabled = True
+optCompatSema4cMenuItem.Enabled = True
+optCompatSema4dMenuItem.Enabled = True
+
+End Sub
+
+Private Sub disableCurrentCompatabilitySelection()
+
+enableAllCompatabilitySelections
+
+' Disable selection of current compatability
+Select Case compatabilityText.Caption
+    Case sema4Text
+        optCompatSema4MenuItem.Enabled = False
+    Case sema4bText
+        optCompatSema4bMenuItem.Enabled = False
+    Case sema4cText
+        optCompatSema4cMenuItem.Enabled = False
+    Case sema4dText
+        optCompatSema4dMenuItem.Enabled = False
+    Case Else
+        optCompatServo4MenuItem.Enabled = False
+End Select
+
+End Sub
+
+Private Sub disableSendStoreReset
+
+setallButton.Enabled = False
+storeButton.Enabled = False
+resetButton.Enabled = False
+
+End Sub
+
+Private Sub enableSendStoreReset
+
+setallButton.Enabled = True
+storeButton.Enabled = True
+resetButton.Enabled = True
+
+End Sub
+
+Private Sub disableChangingSettingValue
+
+centerButton.Enabled = False
+valueScroller.Enabled = False
+valuetext.Enabled = False
+
+End Sub
+
+Private Sub enableChangingSettingValue
+
+centerButton.Enabled = True
+valueScroller.Enabled = True
+valuetext.Enabled = True
+
+End Sub
+
+Private Sub disableExtendedTravel()
+
+xtndTravelSelectionGroup.Visible = False
+xtndTravelSelectionGroup.Enabled = False
+xtndTravelLabel.Enabled = False
+
+End Sub
+
+Private Sub enableExtendedTravel()
+
+If compatabilityText.Caption = sema4cText Or _
+   compatabilityText.Caption = sema4dText Then
+    xtndTravelSelectionGroup.Visible = True
+    xtndTravelSelectionGroup.Enabled = True
+    xtndTravelLabel.Enabled = True
+End If
+
+End Sub
+
+Private Sub disableExtendedTravelSelections()
+
+xtndTravelSelection(0).Enabled = False
+xtndTravelSelection(1).Enabled = False
+xtndTravelSelection(2).Enabled = False
+xtndTravelSelection(3).Enabled = False
+xtndTravelSelectionGroup.Enabled = False
+
+End Sub
+
+Private Sub enableExtendedTravelSelections()
+
+If compatabilityText.Caption = sema4cText Or _
+   compatabilityText.Caption = sema4dText Then
+    xtndTravelSelection(0).Enabled = True
+    xtndTravelSelection(1).Enabled = True
+    xtndTravelSelection(2).Enabled = True
+    xtndTravelSelection(3).Enabled = True
+    xtndTravelSelectionGroup.Enabled = True
+End If
+
+End Sub
+
 Private Sub Form_Load()
 
 ' Initialisation when form is first loaded
@@ -1743,10 +1713,13 @@ settingsFileDialog.Filter = "Sema4Set Files (*.sm4)|*.sm4" _
                             + "!All Files (*.*)|*.*"
 settingsFileDialog.FilterIndex = 1
 
+setRunningMode
+
 settingsFilename = ""
 
-setServo4Compatabillity
+setSema4dCompatabillity
 
+' Prevent newSettings from prompting to save current settings
 settingsChanged = False
 
 newSettings
@@ -1804,7 +1777,7 @@ End Sub
 
 Private Sub optSerPortMenuItem_Click()
 
-changeComPort
+selectComPort comPort.CommPort
 
 End Sub
 
