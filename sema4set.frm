@@ -735,6 +735,9 @@ Begin VB.Form sema4SetForm
          Begin VB.Menu optCompatSema4cMenuItem 
             Caption         =   "Sema4&c"
          End
+         Begin VB.Menu optCompatSema4dMenuItem 
+            Caption         =   "Sema4&d"
+         End
       End
    End
    Begin VB.Menu helpMenu 
@@ -804,6 +807,7 @@ Const servo4CompatabilityText As String = "Servo4"
 Const sema4CompatabilityText  As String = "Sema4"
 Const sema4bCompatabilityText As String = "Sema4b"
 Const sema4cCompatabilityText As String = "Sema4c"
+Const sema4dCompatabilityText As String = "Sema4d"
 
 ' Arrays for setting values and commands, layout:
 '  Servo 1
@@ -1057,6 +1061,7 @@ Private Sub disableAllCompatabilitySelections()
     optCompatSema4MenuItem.Enabled = False
     optCompatSema4bMenuItem.Enabled = False
     optCompatSema4cMenuItem.Enabled = False
+    optCompatSema4dMenuItem.Enabled = False
 
 End Sub
 
@@ -1066,6 +1071,7 @@ Private Sub enableAllCompatabilitySelections()
     optCompatSema4MenuItem.Enabled = True
     optCompatSema4bMenuItem.Enabled = True
     optCompatSema4cMenuItem.Enabled = True
+    optCompatSema4dMenuItem.Enabled = True
 
 End Sub
 
@@ -1077,9 +1083,17 @@ Private Sub disableServo4CompatabilitySelection()
 
 End Sub
 
+Private Sub disableSema4dCompatabilitySelection()
+
+    ' Allow change of compatability selection, excluding Sema4d
+    enableAllCompatabilitySelections
+    optCompatSema4dMenuItem.Enabled = False
+
+End Sub
+
 Private Sub disableSema4cCompatabilitySelection()
 
-    ' Allow change of compatability selection, excluding Sema4b
+    ' Allow change of compatability selection, excluding Sema4c
     enableAllCompatabilitySelections
     optCompatSema4cMenuItem.Enabled = False
 
@@ -1228,8 +1242,7 @@ Private Sub sendCurrentSetting()
 
 Dim n As Integer
 
-' Continuosly send the currently selected setting value so the module tracks
-' changes interactively
+' Send the currently selected setting value
 
 If comPort.PortOpen Then
     On Error GoTo comPortFailure
@@ -1300,7 +1313,7 @@ sema4SetForm.MousePointer = vbHourglass
 Dim sendIndex As Integer
 
 ' Walk the array of setting values
-For sendIndex = LBound(settingValue) To UBound(settingValue)
+For sendIndex = LBound(settingCommand) To UBound(settingCommand)
     ' Test if option button for setting is enabled
     If servoSettingOption(sendIndex).Enabled Then
         ' Send setting command and value
@@ -1309,7 +1322,8 @@ For sendIndex = LBound(settingValue) To UBound(settingValue)
     End If
 Next
 
-If compatabilityText.Caption = sema4cCompatabilityText Then
+If compatabilityText.Caption = sema4cCompatabilityText Or _
+   compatabilityText.Caption = sema4dCompatabilityText Then
     sendCommand Chr(SETTING_BASE + TRVL_SETTING), getExtendedTravelSelections
 End If
 
@@ -1388,6 +1402,8 @@ Input #1, loadedCompatabilityText
 
 If loadedCompatabilityText <> compatabilityText.Caption Then
     Select Case loadedCompatabilityText
+        Case sema4dCompatabilityText
+            setSema4dCompatabillity
         Case sema4cCompatabilityText
             setSema4cCompatabillity
         Case sema4bCompatabilityText
@@ -1529,6 +1545,12 @@ End Sub
 
 Private Sub setServo4Compatabillity()
 
+If sema4dCompatabilityText = compatabilityText.Caption Then
+    flipSpeeds
+End If
+
+convertSpeedToServo4
+
 initialiseServo4SettingCommands
 
 ' Enable the option controls to select settings supported by Servo4
@@ -1561,9 +1583,19 @@ compatabilityText.Caption = servo4CompatabilityText
 
 disableServo4CompatabilitySelection
 
+settingsChanged = True
+
 End Sub
 
 Private Sub setSema4Compatabillity()
+
+If servo4CompatabilityText = compatabilityText.Caption Then
+    convertSpeedFromServo4
+End If
+
+If sema4dCompatabilityText = compatabilityText.Caption Then
+    flipSpeeds
+End If
 
 initialiseSema4SettingCommands
 
@@ -1592,6 +1624,8 @@ compatabilityText.Caption = sema4CompatabilityText
 
 disableSema4CompatabilitySelection
 
+settingsChanged = True
+
 End Sub
 
 Private Sub setSema4bCompatabillity()
@@ -1617,7 +1651,8 @@ Private Sub setSema4cCompatabillity()
 ' Sema4c is a derivative of Sema4b
 setSema4bCompatabillity
 
-' Enable the selection controls to select extended servo travel supported by Servo4c
+' Enable the selection controls to select extended servo travel supported
+' by Servo4c
 xtndTravelSelectionGroup.Visible = True
 xtndTravelSelectionGroup.Enabled = True
 xtndTravelLabel.Enabled = True
@@ -1629,6 +1664,23 @@ selectSetting 0
 compatabilityText.Caption = sema4cCompatabilityText
 
 disableSema4cCompatabilitySelection
+
+End Sub
+
+Private Sub setSema4dCompatabillity()
+
+' Sema4d is a derivative of Sema4c
+setSema4cCompatabillity
+
+flipSpeeds
+
+' Select first setting option control and display corresponding value
+selectSetting 0
+
+' Update compatability mode display
+compatabilityText.Caption = sema4dCompatabilityText
+
+disableSema4dCompatabilitySelection
 
 End Sub
 
@@ -1658,6 +1710,29 @@ settingValue(ON_SPD_NDX_4) = settingValue(ON_SPD_NDX_4) * 16
 
 End Sub
 
+Private Function flipSpeed(speed As Integer) As Integer
+
+flipSpeed = 0
+
+If (0 < speed) Then
+    flipSpeed = 256 - speed
+End If
+
+End Function
+
+Private Sub flipSpeeds()
+
+settingValue(OFF_SPD_NDX_1) = flipSpeed(settingValue(OFF_SPD_NDX_1))
+settingValue(ON_SPD_NDX_1) = flipSpeed(settingValue(ON_SPD_NDX_1))
+settingValue(OFF_SPD_NDX_2) = flipSpeed(settingValue(OFF_SPD_NDX_2))
+settingValue(ON_SPD_NDX_2) = flipSpeed(settingValue(ON_SPD_NDX_2))
+settingValue(OFF_SPD_NDX_3) = flipSpeed(settingValue(OFF_SPD_NDX_3))
+settingValue(ON_SPD_NDX_3) = flipSpeed(settingValue(ON_SPD_NDX_3))
+settingValue(OFF_SPD_NDX_4) = flipSpeed(settingValue(OFF_SPD_NDX_4))
+settingValue(ON_SPD_NDX_4) = flipSpeed(settingValue(ON_SPD_NDX_4))
+
+End Sub
+
 Private Sub Form_Load()
 
 ' Initialisation when form is first loaded
@@ -1671,6 +1746,8 @@ settingsFileDialog.FilterIndex = 1
 settingsFilename = ""
 
 setServo4Compatabillity
+
+settingsChanged = False
 
 newSettings
 
@@ -1733,39 +1810,31 @@ End Sub
 
 Private Sub optCompatServo4MenuItem_Click()
 
-convertSpeedToServo4
 setServo4Compatabillity
-settingsChanged = True
 
 End Sub
 
 Private Sub optCompatSema4MenuItem_Click()
 
-If servo4CompatabilityText = compatabilityText.Caption Then
-    convertSpeedFromServo4
-End If
 setSema4Compatabillity
-settingsChanged = True
 
 End Sub
 
 Private Sub optCompatSema4bMenuItem_Click()
 
-If servo4CompatabilityText = compatabilityText.Caption Then
-    convertSpeedFromServo4
-End If
 setSema4bCompatabillity
-settingsChanged = True
 
 End Sub
 
 Private Sub optCompatSema4cMenuItem_Click()
 
-If servo4CompatabilityText = compatabilityText.Caption Then
-    convertSpeedFromServo4
-End If
 setSema4cCompatabillity
-settingsChanged = True
+
+End Sub
+
+Private Sub optCompatSema4dMenuItem_Click()
+
+setSema4dCompatabillity
 
 End Sub
 
