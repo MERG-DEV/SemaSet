@@ -439,7 +439,7 @@ Begin VB.Form sema4SetForm
       Width           =   1455
       Begin VB.CheckBox bounceSelection 
          Height          =   255
-         Index           =   4
+         Index           =   3
          Left            =   1200
          TabIndex        =   76
          Top             =   0
@@ -447,7 +447,7 @@ Begin VB.Form sema4SetForm
       End
       Begin VB.CheckBox bounceSelection 
          Height          =   255
-         Index           =   3
+         Index           =   2
          Left            =   840
          TabIndex        =   77
          Top             =   0
@@ -455,7 +455,7 @@ Begin VB.Form sema4SetForm
       End
       Begin VB.CheckBox bounceSelection 
          Height          =   255
-         Index           =   2
+         Index           =   1
          Left            =   480
          TabIndex        =   78
          Top             =   0
@@ -463,7 +463,7 @@ Begin VB.Form sema4SetForm
       End
       Begin VB.CheckBox bounceSelection 
          Height          =   255
-         Index           =   1
+         Index           =   0
          Left            =   120
          TabIndex        =   79
          Top             =   0
@@ -904,6 +904,8 @@ setExtendedTravelSelections 0
 
 If servo4Text = compatabilityText.Caption Then
     convertSpeedToServo4
+Else
+    selectAllBounces
 End If
 
 ' Select first setting option control and display corresponding value
@@ -969,7 +971,7 @@ Do Until (EOF(1) Or (UBound(settingValue) < settingIndex))
     settingIndex = 1 + settingIndex
 Loop
 
-If (Not EOF(1)) Then
+If Not EOF(1) Then
     Input #1, settingIndex
     setExtendedTravelSelections settingIndex
 Else
@@ -1057,7 +1059,12 @@ disableCurrentCompatabilitySelection
 
 initialiseServo4SettingCommands
 
-' Disable the selection controls to select bounce, not supported by Servo4
+' Disable bounce, not supported by Servo4
+Dim servoIndex As Integer
+For servoIndex = 0 To NUM_SERVOS - 1
+    servoBounceOff servoIndex
+Next
+deselectAllBounces
 disableBounce
 
 ' Disable the selection controls to select extended servo travel, not supported
@@ -1163,6 +1170,7 @@ disableSendStoreReset
 enableChangingSettingValue
 disableCurrentCompatabilitySelection
 enableExtendedTravelSelections
+enableBounceSelections
 
 End Sub
 
@@ -1183,9 +1191,8 @@ If comPort.PortOpen Then
     enableSendStoreReset
     disableChangingSettingValue
     disableCurrentCompatabilitySelection
-
-    ' Disable changine of extended servo travel selections
     disableExtendedTravelSelections
+    disableBounceSelections
 
 Else
     ' COM port not available so act just as an offline settings editor
@@ -1205,6 +1212,7 @@ disableSendStoreReset
 enableChangingSettingValue
 disableAllCompatabilitySelections
 enableExtendedTravelSelections
+enableBounceSelections
 
 End Sub
 
@@ -1320,11 +1328,44 @@ End If
 
 End Sub
 
+Private Sub servoBounceAvailable(servoIndex As Integer, _
+                                 available As Boolean)
+
+Dim offPositionIndex As Integer
+Dim onPositionIndex As Integer
+
+offPositionIndex = SERVO_SETTINGS * servoIndex
+onPositionIndex = offPositionIndex + 1
+
+Dim offBounceIndex As Integer
+Dim onBounceIndex As Integer
+
+offBounceIndex = SERVO4_SETTINGS + (SEMA_SETTINGS * servoIndex)
+onBounceIndex = offBounceIndex + (SEMA_SETTINGS / 2)
+
+Dim bounceOffset As Integer
+For bounceOffset = 0 To (SEMA_SETTINGS / 2) - 1
+    servoSettingOption(offBounceIndex + bounceOffset).Visible = available
+    servoSettingOption(offBounceIndex + bounceOffset).Enabled = available
+    servoSettingOption(onBounceIndex + bounceOffset).Visible = available
+    servoSettingOption(onBounceIndex + bounceOffset).Enabled = available
+
+    If Not available Then
+        If settingIndex = offBounceIndex + bounceOffset Then
+            selectSetting offPositionIndex
+        ElseIf settingIndex = onBounceIndex + bounceOffset Then
+            selectSetting onPositionIndex
+        End If
+    End If
+Next
+
+End Sub
+
 Private Sub disableBounce()
 
-For settingIndex = SERVO4_SETTINGS To (SEMA4_SETTINGS - 1)
-    servoSettingOption(settingIndex).Visible = False
-    servoSettingOption(settingIndex).Enabled = False
+Dim servoIndex As Integer
+For servoIndex = 0 To NUM_SERVOS - 1
+    servoBounceAvailable servoIndex, False
 Next
 
 offBounce3Label.Enabled = False
@@ -1341,11 +1382,9 @@ End Sub
 
 Private Sub enableBounce()
 
+Dim servoIndex As Integer
 If compatabilityText.Caption <> servo4Text Then
-    For settingIndex = SERVO4_SETTINGS To (SEMA4_SETTINGS - 1)
-        servoSettingOption(settingIndex).Visible = True
-        servoSettingOption(settingIndex).Enabled = True
-    Next
+    checkAllBounces
 
     ' Enable the bounce setting labels
     offBounce3Label.Enabled = True
@@ -1357,6 +1396,64 @@ If compatabilityText.Caption <> servo4Text Then
 
     bounceSelectionGroup.Visible = True
     bounceLabel.Enabled = True
+End If
+
+End Sub
+
+Private Sub selectAllBounces()
+
+Dim servoIndex As Integer
+For servoIndex = 0 To NUM_SERVOS - 1
+    If vbChecked <> bounceSelection(servoIndex).Value Then
+        servoBounceOn servoIndex
+        servoBounceAvailable servoIndex, True
+        bounceSelection(servoIndex).Value = vbChecked
+    End If
+Next
+
+End Sub
+
+Private Sub deselectAllBounces()
+
+Dim servoIndex As Integer
+For servoIndex = 0 To NUM_SERVOS - 1
+    If vbChecked = bounceSelection(servoIndex).Value Then
+        servoBounceOff servoIndex
+        servoBounceAvailable servoIndex, False
+        bounceSelection(servoIndex).Value = vbUnchecked
+    End If
+Next
+
+End Sub
+
+Private Sub checkAllBounces()
+
+Dim servoIndex As Integer
+For servoIndex = 0 To NUM_SERVOS - 1
+    servoBounceAvailable servoIndex, _
+                         (vbChecked = bounceSelection(servoIndex).Value)
+Next
+
+End Sub
+
+Private Sub disableBounceSelections()
+
+bounceSelection(0).Enabled = False
+bounceSelection(1).Enabled = False
+bounceSelection(2).Enabled = False
+bounceSelection(3).Enabled = False
+bounceSelectionGroup.Enabled = False
+
+End Sub
+
+Private Sub enableBounceSelections()
+
+If compatabilityText.Caption <> servo4Text Then
+    bounceSelection(0).Enabled = True
+    bounceSelection(1).Enabled = True
+    bounceSelection(2).Enabled = True
+    bounceSelection(3).Enabled = True
+    bounceSelectionGroup.Enabled = True
 End If
 
 End Sub
@@ -1374,7 +1471,7 @@ connectionText.Caption = newComPortName
 
 End Sub
 
-Private Sub sendCurrentSettings()
+Private Sub sendAllSettings()
 ' Download all the current settings
 
 sema4SetForm.MousePointer = vbHourglass
@@ -1386,13 +1483,13 @@ For sendIndex = LBound(settingCommand) To UBound(settingCommand)
     ' Test if option button for setting is enabled
     If servoSettingOption(sendIndex).Enabled Then
         ' Send setting command and value
-        sendSettingCommand settingCommand(sendIndex), settingValue(sendIndex)
+        sendSetting sendIndex
     End If
 Next
 
 If compatabilityText.Caption = sema4cText Or _
    compatabilityText.Caption = sema4dText Then
-    sendSettingCommand TRVL_SETTING, getExtendedTravelSelections
+    sendSettingValue TRVL_SETTING, getExtendedTravelSelections
 End If
 
 If compatabilityText.Caption <> servo4Text Then
@@ -1423,7 +1520,7 @@ If newValue <> settingValue(settingIndex) Then
     settingValue(settingIndex) = newValue
     valueScroller.Value = newValue
     valueText.Text = newValue
-    sendCurrentSetting
+    sendSetting settingIndex
     settingsChanged = True
 End If
 
@@ -1577,7 +1674,7 @@ End Sub
 Private Sub setallButton_Click()
 
 ' Download all current setting values to module
-sendCurrentSettings
+sendAllSettings
 
 End Sub
 
@@ -1651,7 +1748,19 @@ End Sub
 
 Private Sub xtndTravelSelection_Click(Index As Integer)
 
-sendSetting TRVL_SETTING, getExtendedTravelSelections
+sendSettingValue TRVL_SETTING, getExtendedTravelSelections
 settingsChanged = True
+
+End Sub
+
+Private Sub bounceSelection_Click(Index As Integer)
+
+If vbChecked = bounceSelection(Index).Value Then
+    servoBounceOn Index
+    servoBounceAvailable Index, True
+Else
+    servoBounceOff Index
+    servoBounceAvailable Index, False
+End If
 
 End Sub
