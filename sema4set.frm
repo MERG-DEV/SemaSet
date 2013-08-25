@@ -4,14 +4,14 @@ Object = "{F9043C88-F6F2-101A-A3C9-08002B2F49FB}#1.2#0"; "COMDLG32.OCX"
 Begin VB.Form sema4SetForm 
    BorderStyle     =   0  'None
    Caption         =   "Servo4Sem4Set"
-   ClientHeight    =   4935
+   ClientHeight    =   5175
    ClientLeft      =   105
    ClientTop       =   105
    ClientWidth     =   4245
    Icon            =   "sema4set.frx":0000
    LinkTopic       =   "Form1"
    MaxButton       =   0   'False
-   ScaleHeight     =   4935
+   ScaleHeight     =   5175
    ScaleWidth      =   4245
    StartUpPosition =   2  'CenterScreen
    Visible         =   0   'False
@@ -20,7 +20,7 @@ Begin VB.Form sema4SetForm
       Left            =   720
       MaxLength       =   3
       TabIndex        =   68
-      Top             =   4560
+      Top             =   4800
       Width           =   495
    End
    Begin VB.CommandButton centerButton 
@@ -399,7 +399,7 @@ Begin VB.Form sema4SetForm
       Left            =   1320
       Max             =   255
       TabIndex        =   2
-      Top             =   4560
+      Top             =   4800
       Width           =   2775
    End
    Begin VB.CommandButton storeButton 
@@ -430,12 +430,52 @@ Begin VB.Form sema4SetForm
       InBufferSize    =   128
       OutBufferSize   =   128
    End
+   Begin VB.Frame bounceSelectionGroup 
+      BorderStyle     =   0  'None
+      Height          =   255
+      Left            =   1080
+      TabIndex        =   75
+      Top             =   4080
+      Width           =   1455
+      Begin VB.CheckBox bounceSelection 
+         Height          =   255
+         Index           =   4
+         Left            =   1200
+         TabIndex        =   76
+         Top             =   0
+         Width           =   255
+      End
+      Begin VB.CheckBox bounceSelection 
+         Height          =   255
+         Index           =   3
+         Left            =   840
+         TabIndex        =   77
+         Top             =   0
+         Width           =   255
+      End
+      Begin VB.CheckBox bounceSelection 
+         Height          =   255
+         Index           =   2
+         Left            =   480
+         TabIndex        =   78
+         Top             =   0
+         Width           =   255
+      End
+      Begin VB.CheckBox bounceSelection 
+         Height          =   255
+         Index           =   1
+         Left            =   120
+         TabIndex        =   79
+         Top             =   0
+         Width           =   255
+      End
+   End
    Begin VB.Frame xtndTravelSelectionGroup 
       BorderStyle     =   0  'None
       Height          =   255
       Left            =   1080
       TabIndex        =   70
-      Top             =   4080
+      Top             =   4440
       Width           =   1455
       Begin VB.CheckBox xtndTravelSelection 
          Height          =   255
@@ -675,15 +715,25 @@ Begin VB.Form sema4SetForm
       Top             =   120
       Width           =   465
    End
+   Begin VB.Label bounceLabel 
+      Alignment       =   1  'Right Justify
+      AutoSize        =   -1  'True
+      Caption         =   "Bounce"
+      Height          =   195
+      Left            =   510
+      TabIndex        =   80
+      Top             =   4080
+      Width           =   555
+   End
    Begin VB.Label xtndTravelLabel 
       Alignment       =   1  'Right Justify
       AutoSize        =   -1  'True
       Caption         =   "Long Travel"
       Height          =   195
-      Left            =   120
+      Left            =   210
       TabIndex        =   69
-      Top             =   4080
-      Width           =   945
+      Top             =   4440
+      Width           =   855
    End
    Begin VB.Label valueLabel 
       AutoSize        =   -1  'True
@@ -691,7 +741,7 @@ Begin VB.Form sema4SetForm
       Height          =   195
       Left            =   240
       TabIndex        =   4
-      Top             =   4560
+      Top             =   4800
       Width           =   450
    End
    Begin VB.Menu fileMenu 
@@ -1364,7 +1414,10 @@ onBounce1Label.Enabled = False
 onBounce2Label.Enabled = False
 onBounce3Label.Enabled = False
 
-' Disable the selection controls to select extended servo travel not supported
+' Disable the selection controls to select bounce, not supported by Servo4
+disableBounce
+
+' Disable the selection controls to select extended servo travel, not supported
 ' by Servo4
 disableExtendedTravel
 
@@ -1403,6 +1456,9 @@ offBounce1Label.Enabled = True
 onBounce1Label.Enabled = True
 onBounce2Label.Enabled = True
 onBounce3Label.Enabled = True
+
+' Enable the selection controls to select bounce, not supported by Servo4
+enableBounce
 
 ' Disable the selection controls to select extended servo travel not supported
 ' by Sema4
@@ -1544,6 +1600,7 @@ disableSendStoreReset
 enableChangingSettingValue
 disableCurrentCompatabilitySelection
 enableExtendedTravelSelections
+enableBounceSelections
 
 End Sub
 
@@ -1567,6 +1624,7 @@ If comPort.PortOpen Then
 
     ' Disable changine of extended servo travel selections
     disableExtendedTravelSelections
+    disableBounceSelections
 
 Else
     ' COM port not available so act just as an offline settings editor
@@ -1586,6 +1644,7 @@ disableSendStoreReset
 enableChangingSettingValue
 disableAllCompatabilitySelections
 enableExtendedTravelSelections
+enableBounceSelections
 
 End Sub
 
@@ -1629,7 +1688,7 @@ End Select
 
 End Sub
 
-Private Sub disableSendStoreReset
+Private Sub disableSendStoreReset()
 
 setallButton.Enabled = False
 storeButton.Enabled = False
@@ -1637,7 +1696,7 @@ resetButton.Enabled = False
 
 End Sub
 
-Private Sub enableSendStoreReset
+Private Sub enableSendStoreReset()
 
 setallButton.Enabled = True
 storeButton.Enabled = True
@@ -1645,7 +1704,7 @@ resetButton.Enabled = True
 
 End Sub
 
-Private Sub disableChangingSettingValue
+Private Sub disableChangingSettingValue()
 
 centerButton.Enabled = False
 valueScroller.Enabled = False
@@ -1653,7 +1712,7 @@ valuetext.Enabled = False
 
 End Sub
 
-Private Sub enableChangingSettingValue
+Private Sub enableChangingSettingValue()
 
 centerButton.Enabled = True
 valueScroller.Enabled = True
@@ -1699,6 +1758,46 @@ If compatabilityText.Caption = sema4cText Or _
     xtndTravelSelection(2).Enabled = True
     xtndTravelSelection(3).Enabled = True
     xtndTravelSelectionGroup.Enabled = True
+End If
+
+End Sub
+
+Private Sub disableBounce()
+
+bounceSelectionGroup.Visible = False
+bounceSelectionGroup.Enabled = False
+bounceLabel.Enabled = False
+
+End Sub
+
+Private Sub enableBounce()
+
+If compatabilityText.Caption <> servo4Text Then
+    bounceSelectionGroup.Visible = True
+    bounceSelectionGroup.Enabled = True
+    bounceLabel.Enabled = True
+End If
+
+End Sub
+
+Private Sub disableBounceSelections()
+
+bounceSelection(1).Enabled = False
+bounceSelection(2).Enabled = False
+bounceSelection(3).Enabled = False
+bounceSelection(4).Enabled = False
+bounceSelectionGroup.Enabled = False
+
+End Sub
+
+Private Sub enableBounceSelections()
+
+If compatabilityText.Caption <> servo4Text Then
+    bounceSelection(1).Enabled = True
+    bounceSelection(2).Enabled = True
+    bounceSelection(3).Enabled = True
+    bounceSelection(4).Enabled = True
+    bounceSelectionGroup.Enabled = True
 End If
 
 End Sub
