@@ -7,17 +7,21 @@ Public Const DEFAULT_SETTING As Integer = 127
 ' Maximum speed for Servo4
 Public Const SERVO4_MAX_SPEED As Integer = 7
 
+' Number of Servos
+Public Const NUM_SERVOS As Integer = 4
+
 ' Number of setting values for Servo (on and off, speed and position)
 Public Const SERVO_SETTINGS As Integer = 4
 
 ' Number of setting values for Servo4
-Public Const SERVO4_SETTINGS As Integer = 4 * SERVO_SETTINGS
+Public Const SERVO4_SETTINGS As Integer = NUM_SERVOS * SERVO_SETTINGS
 
 ' Number of extra setting values for Sema (3 off and 3 on bounces)
 Public Const SEMA_SETTINGS  As Integer = 6
 
 ' Number of setting values for Sema4
-Public Const SEMA4_SETTINGS  As Integer = 4 * (SEMA_SETTINGS + SERVO_SETTINGS)
+Public Const SEMA4_SETTINGS  As Integer = _
+    NUM_SERVOS * (SEMA_SETTINGS + SERVO_SETTINGS)
 
 ' Arrays for setting values and commands, layout:
 '  Servo 1
@@ -61,7 +65,8 @@ Public Const OFF_PSTN_NDX_4 As Integer = 12
 Public Const ON_PSTN_NDX_4  As Integer = 13
 Public Const OFF_SPD_NDX_4  As Integer = 14
 Public Const ON_SPD_NDX_4   As Integer = 15
-Public settingIndex    As Integer
+
+Public settingIndex As Integer
 Public settingsChanged As Boolean
 
 ' Extended travel options byte bitmasks
@@ -76,7 +81,7 @@ Public Const SETTINGS_FILE_FORMAT_VERSION As Integer = 0
 Public settingsFilename As String
 
 ' Transmitted command characters
-Public Const SETTING_BASE  As Integer = 65 ' ASCII A
+Public Const COMMAND_BASE  As Integer = 65 ' ASCII A
 Public Const TRVL_SETTING  As Integer = 56
 Public Const STORE_COMMAND As String = "@"
 Public Const RESET_COMMAND As String = "#"
@@ -85,26 +90,17 @@ Public Const RUN_COMMAND   As String = "$"
 ' Reference to current operating mode
 Public runMode As OperatingMode
 
-Public Sub sendSettingCommand(settingCommand As Integer, _
-                               Optional commandValue As Integer = 0)
+Public Sub sendSettingValue(settingCommand As Integer, _
+                            Optional commandValue As Integer = 0)
 
-sendCommand Chr(SETTING_BASE + settingCommand), commandValue
+sendCommand Chr(COMMAND_BASE + settingCommand), commandValue
                         
 End Sub
 
-Public Sub sendSetting(settingCommand As Integer, _
-                        Optional commandValue As Integer = 0)
+Public Sub sendSetting(sendIndex As Integer)
 
-If (SETTING = runMode) Then
-    sendSettingCommand settingCommand, commandValue
-End If
+sendSettingValue settingCommand(settingIndex), settingValue(settingIndex)
                         
-End Sub
-
-Public Sub sendCurrentSetting()
-
-sendSetting settingCommand(settingIndex), settingValue(settingIndex)
-
 End Sub
 
 Public Sub streamCurrentSetting()
@@ -113,8 +109,7 @@ Public Sub streamCurrentSetting()
 
 While (SETTING = runMode)
     ' Send setting command and value for currently selected setting
-    sendSettingCommand settingCommand(settingIndex), _
-                       settingValue(settingIndex)
+    sendSetting settingIndex
 Wend
 
 End Sub
@@ -224,5 +219,48 @@ settingCommand(OFF_SPD_NDX_3) = 52
 settingCommand(ON_SPD_NDX_3) = 53
 settingCommand(OFF_SPD_NDX_4) = 54
 settingCommand(ON_SPD_NDX_4) = 55
+
+End Sub
+
+Public Sub servoBounceOff(servoIndex As Integer)
+
+Dim offPositionIndex As Integer
+Dim onPositionIndex As Integer
+
+offPositionIndex = SERVO_SETTINGS * servoIndex
+onPositionIndex = offPositionIndex + 1
+
+Dim offBounceIndex As Integer
+Dim onBounceIndex As Integer
+
+offBounceIndex = SERVO4_SETTINGS + (SEMA_SETTINGS * servoIndex)
+onBounceIndex = offBounceIndex + (SEMA_SETTINGS / 2)
+
+Dim bounceNumber As Integer
+For bounceNumber = 0 To (SEMA_SETTINGS / 2) - 1
+    settingValue(offBounceIndex + bounceNumber) = _
+        settingValue(offPositionIndex)
+    settingValue(onBounceIndex + bounceNumber) = _
+        settingValue(onPositionIndex)
+Next
+
+settingCommand(offPositionIndex) = offPositionIndex
+settingCommand(onPositionIndex) = onPositionIndex
+
+End Sub
+
+Public Sub servoBounceOn(servoIndex As Integer)
+
+servoBounceOff (servoIndex)
+
+Dim offPositionIndex As Integer
+Dim command As Integer
+
+offPositionIndex = SERVO_SETTINGS * servoIndex
+
+command = 40 + (servoIndex * 2)
+
+settingCommand(offPositionIndex) = command
+settingCommand(offPositionIndex + 1) = command + 1
 
 End Sub
