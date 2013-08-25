@@ -15,7 +15,7 @@ Begin VB.Form sema4SetForm
    ScaleWidth      =   4245
    StartUpPosition =   2  'CenterScreen
    Visible         =   0   'False
-   Begin VB.TextBox valuetext 
+   Begin VB.TextBox valueText 
       Height          =   285
       Left            =   720
       MaxLength       =   3
@@ -427,8 +427,8 @@ Begin VB.Form sema4SetForm
       _ExtentY        =   1005
       _Version        =   393216
       DTREnable       =   -1  'True
-      InBufferSize    =   128
-      OutBufferSize   =   128
+      InBufferSize    =   5
+      OutBufferSize   =   35
    End
    Begin VB.Frame bounceSelectionGroup 
       BorderStyle     =   0  'None
@@ -806,311 +806,14 @@ Attribute VB_Exposed = False
 Option Explicit
 
 ' Key code to indicate completion of direct value input to valueText TextBox
-Const RTN_KEYCODE As Integer = 13
-
-' Maximum speed for Servo4
-Const SERVO4_MAX_SPEED As Integer = 7
+Private Const RTN_KEYCODE As Integer = 13
 
 ' Compatability names
-Const servo4Text As String = "Servo4"
-Const sema4Text  As String = "Sema4"
-Const sema4bText As String = "Sema4b"
-Const sema4cText As String = "Sema4c"
-Const sema4dText As String = "Sema4d"
-
-' Extended travel options byte bitmasks
-Const SRV1_XTND_MASK As Integer = &H4
-Const SRV2_XTND_MASK As Integer = &H8
-Const SRV3_XTND_MASK As Integer = &H40
-Const SRV4_XTND_MASK As Integer = &H80
-
-' Default value to assign to new setting value
-Const DEFAULT_SETTING As Integer = 127
-
-' Number of setting values for Servo (on and off, speed and position)
-Const SERVO_SETTINGS As Integer = 4
-
-' Number of setting values for Servo4
-Const SERVO4_SETTINGS As Integer = 4 * SERVO_SETTINGS
-
-' Number of extra setting values for Sema (3 off and 3 on bounces)
-Const SEMA_SETTINGS  As Integer = 6
-
-' Number of setting values for Sema4
-Const SEMA4_SETTINGS  As Integer = 4 * (SEMA_SETTINGS + SERVO_SETTINGS)
-
-' Arrays for setting values and commands, layout:
-'  Servo 1
-'   Off Position, On Position, Off Speed, On Speed
-'  Servo 2
-'   Off Position, On Position, Off Speed, On Speed
-'  Servo 3
-'   Off Position, On Position, Off Speed, On Speed
-'  Servo 4
-'   Off Position, On Position, Off Speed, On Speed
-'  Servo 1
-'   Off Bounce 1, Off Bounce 2, Off Bounce 3,
-'   On Bounce 1,  On Bounce 2,  On Bounce 3,
-'  Servo 2
-'   Off Bounce 1, Off Bounce 2, Off Bounce 3,
-'   On Bounce 1,  On Bounce 2,  On Bounce 3,
-'  Servo 3
-'   Off Bounce 1, Off Bounce 2, Off Bounce 3,
-'   On Bounce 1,  On Bounce 2,  On Bounce 3,
-'  Servo 4
-'   Off Bounce 1, Off Bounce 2, Off Bounce 3,
-'   On Bounce 1,  On Bounce 2,  On Bounce 3
-'  Servo extended travel selections
-Dim settingValue(0 To (SEMA4_SETTINGS - 1))   As Integer
-Dim settingCommand(0 To (SEMA4_SETTINGS - 1)) As Integer
-
-' Define array index constants for certain values
-Const OFF_PSTN_NDX_1 As Integer = 0
-Const ON_PSTN_NDX_1  As Integer = 1
-Const OFF_SPD_NDX_1  As Integer = 2
-Const ON_SPD_NDX_1   As Integer = 3
-Const OFF_PSTN_NDX_2 As Integer = 4
-Const ON_PSTN_NDX_2  As Integer = 5
-Const OFF_SPD_NDX_2  As Integer = 6
-Const ON_SPD_NDX_2   As Integer = 7
-Const OFF_PSTN_NDX_3 As Integer = 8
-Const ON_PSTN_NDX_3  As Integer = 9
-Const OFF_SPD_NDX_3  As Integer = 10
-Const ON_SPD_NDX_3   As Integer = 11
-Const OFF_PSTN_NDX_4 As Integer = 12
-Const ON_PSTN_NDX_4  As Integer = 13
-Const OFF_SPD_NDX_4  As Integer = 14
-Const ON_SPD_NDX_4   As Integer = 15
-
-Dim settingIndex    As Integer
-Dim settingsChanged As Boolean
-
-' Settings file format version
-Const SETTINGS_FILE_FORMAT_VERSION As Integer = 0
-
-Dim settingsFilename As String
-
-Private Enum OperatingMode
-    RUNNING
-    SETTING
-    OFFLINE
-End Enum
-
-Dim currentMode As OperatingMode
-
-' Number of times to send a non streaming command or setting string
-Const SEND_ITTERATIONS As Integer = 5
-
-' Transmitted command characters
-Const SYNCH_BYTE    As Integer = 0  ' ASCII null
-Const SETTING_BASE  As Integer = 65 ' ASCII A
-Const TRVL_SETTING  As Integer = 56
-Const STORE_COMMAND As String = "@"
-Const RESET_COMMAND As String = "#"
-Const RUN_COMMAND   As String = "$"
-
-Private Sub selectComPort(oldComPortNumber As Integer)
-
-On Error GoTo commError
-
-' If COM port currently open close it
-If True = comPort.PortOpen Then
-    comPort.PortOpen = False
-End If
-
-Dim newComPortName As String
-Dim newComPortNumber As Integer
-
-' Prompt user to select COM port for connection
-newComPortName = InputBox("Select COM Port (0 for Offline editing)", _
-                          "COM Port number", _
-                          oldComPortNumber)
-
-' Convert entered COM Port string to an integer value
-newComPortNumber = CInt(Val(newComPortName))
-
-' Ensure COM port number is greater than 0
-If (1 > newComPortNumber) Then
-    GoTo commOffline
-Else
-    ' Set new COM port number and open COM port
-    comPort.CommPort = newComPortNumber
-    comPort.PortOpen = True
-
-    connectionText.Caption = "COM" + newComPortName
-    setRunningMode
-End If
-
-Exit Sub
-
-commError:
-
-MsgBox "Unable to open the selected COM Port. Please choose another port.", _
-       vbExclamation, _
-       "COM Port Error"
-
-commOffline:
-
-connectionText.Caption = "Offline"
-setOffline
-
-End Sub
-
-Private Sub comPortFailed()
-
-MsgBox "Error accessing COM port, " + Error, vbOKOnly, "COM Port Error"
-
-selectComPort comPort.CommPort
-
-End Sub
-
-Private Sub sendCommand(commandCharacter As String, _
-                        Optional commandValue As Integer = 0, _
-                        Optional sendItterations As Integer = SEND_ITTERATIONS)
-' Send the given command, and optionally a value for the command, repeatedly
-' a set number of times to allow for garbled reception as link has no handshake
-
-Dim n As Integer
-
-On Error GoTo comPortFailure
-
-For n = 1 To sendItterations
-    ' Perform event dispatch to keep GUI alive
-    DoEvents
-
-    If comPort.PortOpen Then
-        ' Send command and value
-        comPort.Output = Chr(SYNCH_BYTE) _
-                         + commandCharacter _
-                         + Format(commandValue, "000")
-    End If
-Next
-
-Exit Sub
-
-comPortFailure:
-    comPortFailed
-
-End Sub
-
-Private Sub sendSettingCommand(settingCommand As Integer, _
-                               Optional commandValue As Integer = 0)
-
-sendCommand Chr(SETTING_BASE + settingCommand), commandValue
-                        
-End Sub
-
-Private Sub sendSetting(settingCommand As Integer, _
-                        Optional commandValue As Integer = 0)
-
-If (SETTING = currentMode) Then
-    sendSettingCommand settingCommand, commandValue
-End If
-                        
-End Sub
-
-Private Sub sendCurrentSetting()
-
-sendSetting settingCommand(settingIndex), settingValue(settingIndex)
-
-End Sub
-
-Private Sub streamCurrentSetting()
-' Continuosly send the currently selected setting value so the module tracks
-' changes interactively
-
-While (SETTING = currentMode)
-    ' Send setting command and value for currently selected setting
-    sendSettingCommand settingCommand(settingIndex), _
-                       settingValue(settingIndex)
-Wend
-
-End Sub
-
-Private Sub sendCurrentSettings()
-' Download all the current settings
-
-sema4SetForm.MousePointer = vbHourglass
-
-Dim sendIndex As Integer
-
-' Walk the array of setting values
-For sendIndex = LBound(settingCommand) To UBound(settingCommand)
-    ' Test if option button for setting is enabled
-    If servoSettingOption(sendIndex).Enabled Then
-        ' Send setting command and value
-        sendSettingCommand settingCommand(sendIndex), settingValue(sendIndex)
-    End If
-Next
-
-If compatabilityText.Caption = sema4cText Or _
-   compatabilityText.Caption = sema4dText Then
-    sendSettingCommand TRVL_SETTING, getExtendedTravelSelections
-End If
-
-If compatabilityText.Caption <> servo4Text Then
-    ' Ensure module leaves Set mode after download
-    sendCommand RUN_COMMAND
-End If
-
-sema4SetForm.MousePointer = vbDefault
-
-End Sub
-
-Private Sub limitSettingValue(testValue As Integer)
-
-If testValue > valueScroller.Max Then
-    testValue = valueScroller.Max
-End If
-If testValue < valueScroller.Min Then
-    testValue = valueScroller.Min
-End If
-
-End Sub
-
-Private Sub changeSettingValue(newValue As Integer)
-
-limitSettingValue newValue
-
-If newValue <> settingValue(settingIndex) Then
-    settingValue(settingIndex) = newValue
-    valueScroller.Value = newValue
-    valuetext.Text = newValue
-    sendCurrentSetting
-    settingsChanged = True
-End If
-
-End Sub
-
-Private Sub selectSetting(newSettingIndex As Integer)
-
-settingIndex = newSettingIndex
-
-valueScroller.Max = 255
-valueScroller.LargeChange = 18
-
-Select Case settingIndex
-
-Case ON_SPD_NDX_1, OFF_SPD_NDX_1, ON_SPD_NDX_2, OFF_SPD_NDX_2, _
-     ON_SPD_NDX_3, OFF_SPD_NDX_3, ON_SPD_NDX_4, OFF_SPD_NDX_4
-    
-    ' Selected setting is a speed
-    If compatabilityText.Caption = servo4Text Then
-        ' Compatability mode is Servo4, limit maximum speed
-        valueScroller.Max = SERVO4_MAX_SPEED
-        valueScroller.LargeChange = 1
-    End If
-
-End Select
-    
-limitSettingValue settingValue(settingIndex)
-
-valueScroller.Value = settingValue(settingIndex)
-valuetext.Text = settingValue(settingIndex)
-
-servoSettingOption(settingIndex).Value = True
-
-End Sub
+Private Const servo4Text As String = "Servo4"
+Private Const sema4Text  As String = "Sema4"
+Private Const sema4bText As String = "Sema4b"
+Private Const sema4cText As String = "Sema4c"
+Private Const sema4dText As String = "Sema4d"
 
 Private Sub setExtendedTravelSelections(newOptions As Integer)
 
@@ -1340,47 +1043,6 @@ sema4SetForm.MousePointer = vbDefault
 
 End Sub
 
-Private Sub initialiseServo4SettingCommands()
-
-' Initialise command for each setting
-For settingIndex = LBound(settingCommand) To UBound(settingCommand)
-    settingCommand(settingIndex) = settingIndex
-Next
-
-End Sub
-
-Private Sub initialiseSema4SettingCommands()
-
-initialiseServo4SettingCommands
-
-' Sema4 has alternative commands for equivalent Servo4 settings
-settingCommand(OFF_PSTN_NDX_1) = 40
-settingCommand(ON_PSTN_NDX_1) = 41
-settingCommand(OFF_PSTN_NDX_2) = 42
-settingCommand(ON_PSTN_NDX_2) = 43
-settingCommand(OFF_PSTN_NDX_3) = 44
-settingCommand(ON_PSTN_NDX_3) = 45
-settingCommand(OFF_PSTN_NDX_4) = 46
-settingCommand(ON_PSTN_NDX_4) = 47
-
-End Sub
-
-Private Sub initialiseSema4bSettingCommands()
-
-initialiseSema4SettingCommands
-
-' Sema4b has alternative commands for equivalent Sema4 settings
-settingCommand(OFF_SPD_NDX_1) = 48
-settingCommand(ON_SPD_NDX_1) = 49
-settingCommand(OFF_SPD_NDX_2) = 50
-settingCommand(ON_SPD_NDX_2) = 51
-settingCommand(OFF_SPD_NDX_3) = 52
-settingCommand(ON_SPD_NDX_3) = 53
-settingCommand(OFF_SPD_NDX_4) = 54
-settingCommand(ON_SPD_NDX_4) = 55
-
-End Sub
-
 Private Sub setServo4Compatabillity()
 
 If sema4dText = compatabilityText.Caption Then
@@ -1394,25 +1056,6 @@ compatabilityText.Caption = servo4Text
 disableCurrentCompatabilitySelection
 
 initialiseServo4SettingCommands
-
-' Enable the option controls to select settings supported by Servo4
-For settingIndex = 0 To (SERVO4_SETTINGS - 1)
-    servoSettingOption(settingIndex).Visible = True
-    servoSettingOption(settingIndex).Enabled = True
-Next
-
-' Disable the option controls to select settings not supported by Servo4
-For settingIndex = SERVO4_SETTINGS To (SEMA4_SETTINGS - 1)
-    servoSettingOption(settingIndex).Visible = False
-    servoSettingOption(settingIndex).Enabled = False
-Next
-
-offBounce3Label.Enabled = False
-offBounce2Label.Enabled = False
-offBounce1Label.Enabled = False
-onBounce1Label.Enabled = False
-onBounce2Label.Enabled = False
-onBounce3Label.Enabled = False
 
 ' Disable the selection controls to select bounce, not supported by Servo4
 disableBounce
@@ -1444,20 +1087,7 @@ disableCurrentCompatabilitySelection
 
 initialiseSema4SettingCommands
 
-' Enable the option controls to select settings supported by Sema4
-For settingIndex = 0 To (SEMA4_SETTINGS - 1)
-    servoSettingOption(settingIndex).Visible = True
-    servoSettingOption(settingIndex).Enabled = True
-Next
-
-offBounce3Label.Enabled = True
-offBounce2Label.Enabled = True
-offBounce1Label.Enabled = True
-onBounce1Label.Enabled = True
-onBounce2Label.Enabled = True
-onBounce3Label.Enabled = True
-
-' Enable the selection controls to select bounce, not supported by Servo4
+' Enable the selection controls to select bounce, supported by Sema4
 enableBounce
 
 ' Disable the selection controls to select extended servo travel not supported
@@ -1521,76 +1151,9 @@ selectSetting 0
 
 End Sub
 
-Private Function toServo4Speed(sema4Speed As Integer) As Integer
-
-toServo4Speed = 0
-
-If (0 < sema4Speed) Then
-    toServo4Speed = sema4Speed / 16
-
-    If (1 > toServo4Speed) Then
-        toServo4Speed = 1
-    End If
-
-    If (SERVO4_MAX_SPEED < toServo4Speed) Then
-        toServo4Speed = SERVO4_MAX_SPEED
-    End If
-End If
-
-End Function
-
-Private Sub convertSpeedToServo4()
-
-settingValue(OFF_SPD_NDX_1) = toServo4Speed(settingValue(OFF_SPD_NDX_1))
-settingValue(ON_SPD_NDX_1) = toServo4Speed(settingValue(ON_SPD_NDX_1))
-settingValue(OFF_SPD_NDX_2) = toServo4Speed(settingValue(OFF_SPD_NDX_2))
-settingValue(ON_SPD_NDX_2) = toServo4Speed(settingValue(ON_SPD_NDX_2))
-settingValue(OFF_SPD_NDX_3) = toServo4Speed(settingValue(OFF_SPD_NDX_3))
-settingValue(ON_SPD_NDX_3) = toServo4Speed(settingValue(ON_SPD_NDX_3))
-settingValue(OFF_SPD_NDX_4) = toServo4Speed(settingValue(OFF_SPD_NDX_4))
-settingValue(ON_SPD_NDX_4) = toServo4Speed(settingValue(ON_SPD_NDX_4))
-
-End Sub
-
-Private Sub convertSpeedFromServo4()
-
-settingValue(OFF_SPD_NDX_1) = settingValue(OFF_SPD_NDX_1) * 16
-settingValue(ON_SPD_NDX_1) = settingValue(ON_SPD_NDX_1) * 16
-settingValue(OFF_SPD_NDX_2) = settingValue(OFF_SPD_NDX_2) * 16
-settingValue(ON_SPD_NDX_2) = settingValue(ON_SPD_NDX_2) * 16
-settingValue(OFF_SPD_NDX_3) = settingValue(OFF_SPD_NDX_3) * 16
-settingValue(ON_SPD_NDX_3) = settingValue(ON_SPD_NDX_3) * 16
-settingValue(OFF_SPD_NDX_4) = settingValue(OFF_SPD_NDX_4) * 16
-settingValue(ON_SPD_NDX_4) = settingValue(ON_SPD_NDX_4) * 16
-
-End Sub
-
-Private Function flipSpeed(speed As Integer) As Integer
-
-flipSpeed = 0
-
-If (0 < speed) Then
-    flipSpeed = 256 - speed
-End If
-
-End Function
-
-Private Sub flipSpeeds()
-
-settingValue(OFF_SPD_NDX_1) = flipSpeed(settingValue(OFF_SPD_NDX_1))
-settingValue(ON_SPD_NDX_1) = flipSpeed(settingValue(ON_SPD_NDX_1))
-settingValue(OFF_SPD_NDX_2) = flipSpeed(settingValue(OFF_SPD_NDX_2))
-settingValue(ON_SPD_NDX_2) = flipSpeed(settingValue(ON_SPD_NDX_2))
-settingValue(OFF_SPD_NDX_3) = flipSpeed(settingValue(OFF_SPD_NDX_3))
-settingValue(ON_SPD_NDX_3) = flipSpeed(settingValue(ON_SPD_NDX_3))
-settingValue(OFF_SPD_NDX_4) = flipSpeed(settingValue(OFF_SPD_NDX_4))
-settingValue(ON_SPD_NDX_4) = flipSpeed(settingValue(ON_SPD_NDX_4))
-
-End Sub
-
 Private Sub setOffline()
 
-currentMode = OFFLINE
+runMode = OFFLINE
 
 ' Disable selection of Run or Set mode
 runButton.Enabled = False
@@ -1600,13 +1163,12 @@ disableSendStoreReset
 enableChangingSettingValue
 disableCurrentCompatabilitySelection
 enableExtendedTravelSelections
-enableBounceSelections
 
 End Sub
 
 Private Sub setRunningMode()
 
-currentMode = RUNNING
+runMode = RUNNING
 
 If comPort.PortOpen Then
     If compatabilityText.Caption <> servo4Text Then
@@ -1624,7 +1186,6 @@ If comPort.PortOpen Then
 
     ' Disable changine of extended servo travel selections
     disableExtendedTravelSelections
-    disableBounceSelections
 
 Else
     ' COM port not available so act just as an offline settings editor
@@ -1635,7 +1196,7 @@ End Sub
 
 Private Sub setSettingMode()
 
-currentMode = SETTING
+runMode = SETTING
 
 runButton.Enabled = True
 setButton.Enabled = False
@@ -1644,7 +1205,6 @@ disableSendStoreReset
 enableChangingSettingValue
 disableAllCompatabilitySelections
 enableExtendedTravelSelections
-enableBounceSelections
 
 End Sub
 
@@ -1708,7 +1268,7 @@ Private Sub disableChangingSettingValue()
 
 centerButton.Enabled = False
 valueScroller.Enabled = False
-valuetext.Enabled = False
+valueText.Enabled = False
 
 End Sub
 
@@ -1716,14 +1276,13 @@ Private Sub enableChangingSettingValue()
 
 centerButton.Enabled = True
 valueScroller.Enabled = True
-valuetext.Enabled = True
+valueText.Enabled = True
 
 End Sub
 
 Private Sub disableExtendedTravel()
 
 xtndTravelSelectionGroup.Visible = False
-xtndTravelSelectionGroup.Enabled = False
 xtndTravelLabel.Enabled = False
 
 End Sub
@@ -1733,7 +1292,6 @@ Private Sub enableExtendedTravel()
 If compatabilityText.Caption = sema4cText Or _
    compatabilityText.Caption = sema4dText Then
     xtndTravelSelectionGroup.Visible = True
-    xtndTravelSelectionGroup.Enabled = True
     xtndTravelLabel.Enabled = True
 End If
 
@@ -1764,8 +1322,19 @@ End Sub
 
 Private Sub disableBounce()
 
+For settingIndex = SERVO4_SETTINGS To (SEMA4_SETTINGS - 1)
+    servoSettingOption(settingIndex).Visible = False
+    servoSettingOption(settingIndex).Enabled = False
+Next
+
+offBounce3Label.Enabled = False
+offBounce2Label.Enabled = False
+offBounce1Label.Enabled = False
+onBounce1Label.Enabled = False
+onBounce2Label.Enabled = False
+onBounce3Label.Enabled = False
+
 bounceSelectionGroup.Visible = False
-bounceSelectionGroup.Enabled = False
 bounceLabel.Enabled = False
 
 End Sub
@@ -1773,38 +1342,126 @@ End Sub
 Private Sub enableBounce()
 
 If compatabilityText.Caption <> servo4Text Then
+    For settingIndex = SERVO4_SETTINGS To (SEMA4_SETTINGS - 1)
+        servoSettingOption(settingIndex).Visible = True
+        servoSettingOption(settingIndex).Enabled = True
+    Next
+
+    ' Enable the bounce setting labels
+    offBounce3Label.Enabled = True
+    offBounce2Label.Enabled = True
+    offBounce1Label.Enabled = True
+    onBounce1Label.Enabled = True
+    onBounce2Label.Enabled = True
+    onBounce3Label.Enabled = True
+
     bounceSelectionGroup.Visible = True
-    bounceSelectionGroup.Enabled = True
     bounceLabel.Enabled = True
 End If
 
 End Sub
 
-Private Sub disableBounceSelections()
+Private Sub setComPort(Optional oldComPortNumber As Integer = 1)
 
-bounceSelection(1).Enabled = False
-bounceSelection(2).Enabled = False
-bounceSelection(3).Enabled = False
-bounceSelection(4).Enabled = False
-bounceSelectionGroup.Enabled = False
+Dim newComPortName As String
+newComPortName = selectComPort(oldComPortNumber)
+If "Offline" = newComPortName Then
+    setOffline
+Else
+    setRunningMode
+End If
+connectionText.Caption = newComPortName
 
 End Sub
 
-Private Sub enableBounceSelections()
+Private Sub sendCurrentSettings()
+' Download all the current settings
+
+sema4SetForm.MousePointer = vbHourglass
+
+Dim sendIndex As Integer
+
+' Walk the array of setting values
+For sendIndex = LBound(settingCommand) To UBound(settingCommand)
+    ' Test if option button for setting is enabled
+    If servoSettingOption(sendIndex).Enabled Then
+        ' Send setting command and value
+        sendSettingCommand settingCommand(sendIndex), settingValue(sendIndex)
+    End If
+Next
+
+If compatabilityText.Caption = sema4cText Or _
+   compatabilityText.Caption = sema4dText Then
+    sendSettingCommand TRVL_SETTING, getExtendedTravelSelections
+End If
 
 If compatabilityText.Caption <> servo4Text Then
-    bounceSelection(1).Enabled = True
-    bounceSelection(2).Enabled = True
-    bounceSelection(3).Enabled = True
-    bounceSelection(4).Enabled = True
-    bounceSelectionGroup.Enabled = True
+    ' Ensure module leaves Set mode after download
+    sendCommand RUN_COMMAND
+End If
+
+sema4SetForm.MousePointer = vbDefault
+
+End Sub
+
+Private Sub limitSettingValue(testValue As Integer)
+
+If testValue > valueScroller.Max Then
+    testValue = valueScroller.Max
+End If
+If testValue < valueScroller.Min Then
+    testValue = valueScroller.Min
 End If
 
 End Sub
 
-Private Sub Form_Load()
+Private Sub changeSettingValue(newValue As Integer)
 
+limitSettingValue newValue
+
+If newValue <> settingValue(settingIndex) Then
+    settingValue(settingIndex) = newValue
+    valueScroller.Value = newValue
+    valueText.Text = newValue
+    sendCurrentSetting
+    settingsChanged = True
+End If
+
+End Sub
+
+Private Sub selectSetting(newSettingIndex As Integer)
+
+settingIndex = newSettingIndex
+
+valueScroller.Max = 255
+valueScroller.LargeChange = 18
+
+If compatabilityText.Caption = servo4Text Then
+    Select Case settingIndex
+
+    Case ON_SPD_NDX_1, OFF_SPD_NDX_1, ON_SPD_NDX_2, OFF_SPD_NDX_2, _
+         ON_SPD_NDX_3, OFF_SPD_NDX_3, ON_SPD_NDX_4, OFF_SPD_NDX_4
+    
+        ' Selected setting is a speed limit for Servo4
+        valueScroller.Max = SERVO4_MAX_SPEED
+        valueScroller.LargeChange = 1
+    End Select
+End If
+    
+limitSettingValue settingValue(settingIndex)
+
+valueScroller.Value = settingValue(settingIndex)
+valueText.Text = settingValue(settingIndex)
+
+servoSettingOption(settingIndex).Value = True
+
+End Sub
+
+Private Sub Form_Load()
 ' Initialisation when form is first loaded
+
+' Export references to  display elements by other modules
+Set sema4Port = comPort
 
 ' Set up File Dialog filter to match Sema4 settings files
 settingsFileDialog.Filter = "Sema4Set Files (*.sm4)|*.sm4" _
@@ -1823,7 +1480,7 @@ settingsChanged = False
 
 newSettings
 
-selectComPort 1
+setComPort
 
 Show
 
@@ -1876,7 +1533,7 @@ End Sub
 
 Private Sub optSerPortMenuItem_Click()
 
-selectComPort comPort.CommPort
+setComPort comPort.commport
 
 End Sub
 
@@ -1975,19 +1632,19 @@ End If
 
 End Sub
 
-Private Sub valuetext_KeyUp(keyCode As Integer, shift As Integer)
+Private Sub valueText_KeyUp(keyCode As Integer, shift As Integer)
 
 If RTN_KEYCODE = keyCode And _
-   (settingValue(settingIndex) <> CInt(Val(valuetext.Text))) Then
-    changeSettingValue CInt(Val(valuetext.Text))
+   (settingValue(settingIndex) <> CInt(Val(valueText.Text))) Then
+    changeSettingValue CInt(Val(valueText.Text))
 End If
 
 End Sub
 
-Private Sub valuetext_LostFocus()
+Private Sub valueText_LostFocus()
 
-If settingValue(settingIndex) <> CInt(Val(valuetext.Text)) Then
-    changeSettingValue CInt(Val(valuetext.Text))
+If settingValue(settingIndex) <> CInt(Val(valueText.Text)) Then
+    changeSettingValue CInt(Val(valueText.Text))
 End If
 
 End Sub
