@@ -26,25 +26,37 @@ Public Const SEMA4_SETTINGS  As Integer = _
 ' Arrays for setting values and commands, layout:
 '  Servo 1
 '   Off Position, On Position, Off Speed, On Speed
+'   [0]           [1]          [2]        [3]
 '  Servo 2
 '   Off Position, On Position, Off Speed, On Speed
+'   [4]           [5]          [6]        [7]
 '  Servo 3
 '   Off Position, On Position, Off Speed, On Speed
+'   [8]           [9]          [10]       [11]
 '  Servo 4
 '   Off Position, On Position, Off Speed, On Speed
+'   [12]          [13]         [14]       [15]
 '  Servo 1
 '   Off Bounce 1, Off Bounce 2, Off Bounce 3,
+'   [16]          [17]         [18]
 '   On Bounce 1,  On Bounce 2,  On Bounce 3,
+'   [19]          [20]         [21]
 '  Servo 2
 '   Off Bounce 1, Off Bounce 2, Off Bounce 3,
+'   [22]          [23]         [24]
 '   On Bounce 1,  On Bounce 2,  On Bounce 3,
+'   [25]          [26]         [27]
 '  Servo 3
 '   Off Bounce 1, Off Bounce 2, Off Bounce 3,
+'   [28]          [29]         [30]
 '   On Bounce 1,  On Bounce 2,  On Bounce 3,
+'   [31]          [32]         [33]
 '  Servo 4
 '   Off Bounce 1, Off Bounce 2, Off Bounce 3,
+'   [34]          [35]         [36]
 '   On Bounce 1,  On Bounce 2,  On Bounce 3
-'  Servo extended travel selections
+'   [37]          [38]         [39]
+
 Public settingValue(0 To (SEMA4_SETTINGS - 1))   As Integer
 Public settingCommand(0 To (SEMA4_SETTINGS - 1)) As Integer
 
@@ -98,6 +110,7 @@ sendCommand Chr(COMMAND_BASE + settingCommand), commandValue
 End Sub
 
 Public Sub sendSetting(sendIndex As Integer)
+' Send setting command and value for indexed setting
 
 sendSettingValue settingCommand(sendIndex), settingValue(sendIndex)
                         
@@ -111,6 +124,32 @@ While (SETTING = runMode)
     ' Send setting command and value for currently selected setting
     sendSetting settingIndex
 Wend
+
+End Sub
+
+Private Function limitServo4Speed(servo4Speed As Integer) As Integer
+
+limitServo4Speed = servo4Speed
+
+If (0 > servo4Speed) Then
+    limitServo4Speed = 0
+End If
+If (SERVO4_MAX_SPEED < servo4Speed) Then
+        limitServo4Speed = SERVO4_MAX_SPEED
+End If
+
+End Function
+
+Public Sub limitServo4Speeds()
+
+settingValue(OFF_SPD_NDX_1) = limitServo4Speed(settingValue(OFF_SPD_NDX_1))
+settingValue(ON_SPD_NDX_1) = limitServo4Speed(settingValue(ON_SPD_NDX_1))
+settingValue(OFF_SPD_NDX_2) = limitServo4Speed(settingValue(OFF_SPD_NDX_2))
+settingValue(ON_SPD_NDX_2) = limitServo4Speed(settingValue(ON_SPD_NDX_2))
+settingValue(OFF_SPD_NDX_3) = limitServo4Speed(settingValue(OFF_SPD_NDX_3))
+settingValue(ON_SPD_NDX_3) = limitServo4Speed(settingValue(ON_SPD_NDX_3))
+settingValue(OFF_SPD_NDX_4) = limitServo4Speed(settingValue(OFF_SPD_NDX_4))
+settingValue(ON_SPD_NDX_4) = limitServo4Speed(settingValue(ON_SPD_NDX_4))
 
 End Sub
 
@@ -223,6 +262,10 @@ settingCommand(ON_SPD_NDX_4) = 55
 End Sub
 
 Public Sub servoBounceOff(servoIndex As Integer)
+' Set all the bounce position settings for a servo to the appropriate on or
+' off position setting, also change commands used for those on and off
+' positions to be the Servo4 versions which cause the module to do the same
+' on receipt of a position setting
 
 Dim offPositionIndex As Integer
 Dim onPositionIndex As Integer
@@ -255,6 +298,10 @@ End If
 End Sub
 
 Public Sub servoBounceOn(servoIndex As Integer)
+' Set all the bounce position settings for a servo to the appropriate on or
+' off position setting, also change commands used for those on and off
+' positions to be the Sema4 versions which don't cause the module to change
+' the bounce settings on receipt of the associated on or off position setting
 
 servoBounceOff (servoIndex)
 

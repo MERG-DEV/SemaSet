@@ -912,6 +912,8 @@ End If
 selectSetting 0
 
 settingsChanged = False
+
+' Clear display of any filename in the window title bar
 sema4SetForm.Caption = ""
 
 End Sub
@@ -958,6 +960,7 @@ Select Case loadedCompatabilityText
 End Select
 
 If (servo4Text <> compatabilityText.Caption) Then
+    ' For any Sema4 initially select all bounces by default
     selectAllBounces
 End If
 
@@ -992,6 +995,8 @@ If (servo4Text <> compatabilityText.Caption) Then
     Next
 
     checkBounceSelections
+Else
+    limitServo4Speeds
 End If
 
 ' Close the settings file
@@ -1001,10 +1006,11 @@ Close #1
 selectSetting 0
 
 settingsChanged = False
+
+' Display the filename in the window title bar
 sema4SetForm.Caption = _
     Right(settingsFilename, _
-    (Len(settingsFilename) - InStrRev(settingsFilename, _
-    "\")))
+          (Len(settingsFilename) - InStrRev(settingsFilename, "\")))
 
 errorCancelLoad:
 
@@ -1056,6 +1062,8 @@ Next
 Close #1
 
 settingsChanged = False
+
+' Display the filename in the window title bar
 sema4SetForm.Caption = _
     Right(settingsFilename, _
           (Len(settingsFilename) - InStrRev(settingsFilename, "\")))
@@ -1069,9 +1077,12 @@ End Sub
 Private Sub setServo4Compatabillity()
 
 If (sema4dText = compatabilityText.Caption) Then
+    ' Sema4d speeds run 0 - fastest to 255 - slowest, previous versions were
+    ' 0 - fastest then 1 - slowest to 255 - fastest
     flipSpeeds
 End If
 
+' Must have previously been in one of the Sema4 modes
 convertSpeedToServo4
 
 ' Update compatability mode display
@@ -1087,14 +1098,15 @@ disableExtendedTravel
 ' Select first setting option control and display corresponding value
 selectSetting 0
 
-settingsChanged = True
-
 End Sub
 
 Private Sub setSema4Compatabillity()
 
+' Check the current compatability mode
 Select Case compatabilityText.Caption
     Case sema4dText
+        ' Sema4d speeds run 0 - fastest to 255 - slowest, previous versions
+        ' were 0 - fastest then 1 - slowest to 255 - fastest
         flipSpeeds
     Case servo4Text
         convertSpeedFromServo4
@@ -1107,12 +1119,21 @@ disableCurrentCompatabilitySelection
 initialiseSema4SettingCommands
 
 enableBounce
+
+' Commands are initialised for Sema4 with bounce so use the appropriate Servo4
+' command for any deslected bounces
+Dim servoIndex As Integer
+For servoIndex = 0 To NUM_SERVOS - 1
+    If (vbUnchecked = bounceSelection(servoIndex).Value) Then
+        servoBounceOff servoIndex
+    End If
+Next
+
+' Extended travel only supported from Sema4c onwards
 disableExtendedTravel
 
 ' Select first setting option control and display corresponding value
 selectSetting 0
-
-settingsChanged = True
 
 End Sub
 
@@ -1142,7 +1163,7 @@ compatabilityText.Caption = sema4cText
 disableCurrentCompatabilitySelection
 
 ' Enable the selection controls to select extended servo travel supported
-' by Sema4c
+' from Sema4c onwards
 enableExtendedTravel
 
 ' Select first setting option control and display corresponding value
@@ -1159,6 +1180,8 @@ setSema4cCompatabillity
 compatabilityText.Caption = sema4dText
 disableCurrentCompatabilitySelection
 
+' Sema4d speeds run 0 - fastest to 255 - slowest, previous versions were
+' 0 - fastest then 1 - slowest to 255 - fastest
 flipSpeeds
 
 ' Select first setting option control and display corresponding value
@@ -1167,6 +1190,7 @@ selectSetting 0
 End Sub
 
 Private Sub setOffline()
+' Allow editing of settings whilst not connected to any hardware
 
 runMode = OFFLINE
 
@@ -1183,6 +1207,8 @@ enableBounceSelection
 End Sub
 
 Private Sub setRunningMode()
+' Module is allowed to run normally without any settings being sent unless
+' the Set All button is pressed
 
 runMode = RUNNING
 
@@ -1210,6 +1236,8 @@ End If
 End Sub
 
 Private Sub setSettingMode()
+' Currently selected option value is continually streamed to module allowing
+' effect of change to be seen immediately
 
 runMode = SETTING
 
@@ -1315,10 +1343,11 @@ End Sub
 
 Private Sub disableExtendedTravelSelections()
 
-xtndTravelSelection(0).Enabled = False
-xtndTravelSelection(1).Enabled = False
-xtndTravelSelection(2).Enabled = False
-xtndTravelSelection(3).Enabled = False
+Dim servoIndex As Integer
+For servoIndex = 0 To NUM_SERVOS - 1
+    xtndTravelSelection(servoIndex).Enabled = False
+Next
+
 xtndTravelSelectionGroup.Enabled = False
 
 End Sub
@@ -1327,10 +1356,11 @@ Private Sub enableExtendedTravelSelections()
 
 If ((sema4cText = compatabilityText.Caption) Or _
     (sema4dText = compatabilityText.Caption)) Then
-    xtndTravelSelection(0).Enabled = True
-    xtndTravelSelection(1).Enabled = True
-    xtndTravelSelection(2).Enabled = True
-    xtndTravelSelection(3).Enabled = True
+    Dim servoIndex As Integer
+    For servoIndex = 0 To NUM_SERVOS - 1
+        xtndTravelSelection(servoIndex).Enabled = True
+    Next
+
     xtndTravelSelectionGroup.Enabled = True
 End If
 
@@ -1391,7 +1421,6 @@ Dim servoIndex As Integer
 If (servo4Text <> compatabilityText.Caption) Then
     checkBounceSelections
 
-    ' Enable the bounce setting labels
     offBounce3Label.Enabled = True
     offBounce2Label.Enabled = True
     offBounce1Label.Enabled = True
@@ -1494,7 +1523,7 @@ sema4SetForm.MousePointer = vbHourglass
 Dim sendIndex As Integer
 
 ' Walk the array of setting values
-For sendIndex = LBound(settingCommand) To UBound(settingCommand)
+For sendIndex = LBound(settingValue) To UBound(settingValue)
     ' Test if option button for setting is enabled
     If (servoSettingOption(sendIndex).Enabled) Then
         ' Send setting command and value
@@ -1511,6 +1540,9 @@ If (servo4Text <> compatabilityText.Caption) Then
     ' Ensure module leaves Set mode after download
     sendCommand RUN_COMMAND
 End If
+
+' Select first setting option control and display corresponding value
+selectSetting 0
 
 sema4SetForm.MousePointer = vbDefault
 
@@ -1555,6 +1587,7 @@ If (servo4Text = compatabilityText.Caption) Then
          ON_SPD_NDX_3, OFF_SPD_NDX_3, ON_SPD_NDX_4, OFF_SPD_NDX_4
     
         ' Selected setting is a speed limit for Servo4
+        valueScroller.Value = settingValue(settingIndex)
         valueScroller.Max = SERVO4_MAX_SPEED
         valueScroller.LargeChange = 1
     End Select
@@ -1572,7 +1605,7 @@ End Sub
 Private Sub Form_Load()
 ' Initialisation when form is first loaded
 
-' Export references to  display elements by other modules
+' Export references to control referenced by other modules
 Set sema4Port = comPort
 
 ' Set up File Dialog filter to match Sema4 settings files
@@ -1652,30 +1685,35 @@ End Sub
 Private Sub optCompatServo4MenuItem_Click()
 
 setServo4Compatabillity
+settingsChanged = True
 
 End Sub
 
 Private Sub optCompatSema4MenuItem_Click()
 
 setSema4Compatabillity
+settingsChanged = True
 
 End Sub
 
 Private Sub optCompatSema4bMenuItem_Click()
 
 setSema4bCompatabillity
+settingsChanged = True
 
 End Sub
 
 Private Sub optCompatSema4cMenuItem_Click()
 
 setSema4cCompatabillity
+settingsChanged = True
 
 End Sub
 
 Private Sub optCompatSema4dMenuItem_Click()
 
 setSema4dCompatabillity
+settingsChanged = True
 
 End Sub
 
