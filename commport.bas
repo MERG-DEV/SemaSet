@@ -15,7 +15,7 @@ selectComPort = "Offline"
 
 On Error GoTo commError
 
-' If COM port currently open close it
+' If COM port is currently open close it
 If (sema4Port.PortOpen) Then
     sema4Port.PortOpen = False
 End If
@@ -63,10 +63,17 @@ selectComPort sema4Port.commport
 End Sub
 
 Public Sub sendCommand(commandCharacter As String, _
-                        Optional commandValue As Integer = 0, _
-                        Optional sendItterations As Integer = SEND_ITTERATIONS)
+                       Optional commandValue As Integer = 0, _
+                       Optional sendItterations As Integer = SEND_ITTERATIONS)
 ' Send the given command, and optionally a value for the command, repeatedly
 ' a set number of times to allow for garbled reception as link has no handshake
+
+' Limit command value to an unsigned 8 bit integer (byte)
+If (0 > commandValue) Then
+    commandValue = 0
+ElseIf (255 < commandValue) Then
+    commandValue = 255
+End If
 
 Dim n As Integer
 
