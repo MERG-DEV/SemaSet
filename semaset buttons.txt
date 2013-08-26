@@ -12,4 +12,4 @@
 
 Value can be changed directly by: Double click in the value box so value figures are highlighted; Type desired value; Press "Return" (or "Enter") on keyboard and slider will jump to the appropriate position.
 
-In the "Select COM Port" dialog entering "0" put's the utility into "Offline" mode. settings can be loaded, changed, and saved but no commands are sent via any serial ports.
+In the "Select COM Port" dialog entering "0" puts the utility into "Offline" mode. settings can be loaded, changed, and saved but no commands are sent via any serial ports.
