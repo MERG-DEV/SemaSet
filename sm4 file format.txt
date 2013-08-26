@@ -1,4 +1,4 @@
-Compatability
+Compatability (as a text string)
 Format version
 Servo 1 Off Position
 Servo 1 On Position
@@ -46,3 +46,7 @@ Extended travel output pulse selection
         bit 6 - Servo 3 extended travel selected
         bit 3 - Servo 2 extended travel selected
         bit 2 - Servo 1 extended travel selected
+Servo 1 Bounce Selection
+Servo 2 Bounce Selection
+Servo 3 Bounce Selection
+Servo 4 Bounce Selection
