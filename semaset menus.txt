@@ -1,0 +1,17 @@
+File
+  New - Restore all settings to default values and forget current file being edited (if any)
+  Open - Read settings from a file
+  Save - Save settings to current file
+  Save As - Save settings to a new file
+  Exit - Quit the application
+
+Options
+  Serial Port - Select COM port for connection to Servo control module (0 to work offline)
+  Compatability
+    Servo4 - Select settings and use commands compatable with original Servo4 firmware
+    Sema4 - Select settings and use commands compatable with alternative Sema4 firmware
+    Sema4b - Select settings and use commands compatable with alternative Sema4b firmware
+    Sema4c - Select settings and use commands compatable with alternative Sema4c firmware
+
+Help
+  About - Display a build version information dialog
