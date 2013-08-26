@@ -99,7 +99,7 @@ End Sub
 
 Public Sub sendSetting(sendIndex As Integer)
 
-sendSettingValue settingCommand(settingIndex), settingValue(settingIndex)
+sendSettingValue settingCommand(sendIndex), settingValue(sendIndex)
                         
 End Sub
 
@@ -246,6 +246,11 @@ Next
 
 settingCommand(offPositionIndex) = offPositionIndex
 settingCommand(onPositionIndex) = onPositionIndex
+
+If (SETTING = runMode) Then
+    sendSetting offPositionIndex
+    sendSetting onPositionIndex
+End If
 
 End Sub
 
