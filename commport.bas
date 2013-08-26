@@ -16,7 +16,7 @@ selectComPort = "Offline"
 On Error GoTo commError
 
 ' If COM port currently open close it
-If True = sema4Port.PortOpen Then
+If (sema4Port.PortOpen) Then
     sema4Port.PortOpen = False
 End If
 
@@ -76,7 +76,7 @@ For n = 1 To sendItterations
     ' Perform event dispatch to keep GUI alive
     DoEvents
 
-    If sema4Port.PortOpen Then
+    If (sema4Port.PortOpen) Then
         ' Send command and value
         sema4Port.Output = Chr(SYNCH_BYTE) _
                            + commandCharacter _
