@@ -847,26 +847,20 @@ Private Function getExtendedTravelSelections() As Integer
 
 getExtendedTravelSelections = 0
 
-If (xtndTravelSelectionGroup.Enabled) Then
-    If (vbChecked = xtndTravelSelection(0).Value) Then
-        getExtendedTravelSelections = (SRV1_XTND_MASK Or _
-                                       getExtendedTravelSelections)
-    End If
+If (vbChecked = xtndTravelSelection(0).Value) Then
+    getExtendedTravelSelections = (SRV1_XTND_MASK Or getExtendedTravelSelections)
+End If
     
-    If (vbChecked = xtndTravelSelection(1).Value) Then
-        getExtendedTravelSelections = (SRV2_XTND_MASK Or _
-                                       getExtendedTravelSelections)
-    End If
+If (vbChecked = xtndTravelSelection(1).Value) Then
+    getExtendedTravelSelections = (SRV2_XTND_MASK Or getExtendedTravelSelections)
+End If
     
-    If (vbChecked = xtndTravelSelection(2).Value) Then
-        getExtendedTravelSelections = (SRV3_XTND_MASK Or _
-                                       getExtendedTravelSelections)
-    End If
+If (vbChecked = xtndTravelSelection(2).Value) Then
+    getExtendedTravelSelections = (SRV3_XTND_MASK Or getExtendedTravelSelections)
+End If
     
-    If (vbChecked = xtndTravelSelection(3).Value) Then
-        getExtendedTravelSelections = (SRV4_XTND_MASK Or _
-                                       getExtendedTravelSelections)
-    End If
+If (vbChecked = xtndTravelSelection(3).Value) Then
+    getExtendedTravelSelections = (SRV4_XTND_MASK Or getExtendedTravelSelections)
 End If
 
 End Function
@@ -889,10 +883,12 @@ Private Sub newSettings()
 ' After checking if current settings need saving change all settings to
 ' default values
 
-' Force into running mode to prevent values being sent as they are initialised
-setRunningMode
+' Force into offline mode to prevent values being sent as they are loaded
+setOffline
 
 checkIfSaveNeeded
+
+sema4SetForm.MousePointer = vbHourglass
 
 ' Walk the array of setting values restoring all to default value
 For settingIndex = LBound(settingValue) To UBound(settingValue)
@@ -913,16 +909,21 @@ selectSetting 0
 
 settingsChanged = False
 
+' Default into running mode
+setRunningMode
+
 ' Clear display of any filename in the window title bar
 sema4SetForm.Caption = ""
+
+sema4SetForm.MousePointer = vbDefault
 
 End Sub
 
 Private Sub loadSettings()
 ' After checking if current settings need saving load all settings from file
 
-' Force into running mode to prevent values being sent as they are loaded
-setRunningMode
+' Force into offline mode to prevent values being sent as they are loaded
+setOffline
 
 checkIfSaveNeeded
 
@@ -1013,6 +1014,9 @@ sema4SetForm.Caption = _
           (Len(settingsFilename) - InStrRev(settingsFilename, "\")))
 
 errorCancelLoad:
+
+' Default into running mode
+setRunningMode
 
 sema4SetForm.MousePointer = vbDefault
 

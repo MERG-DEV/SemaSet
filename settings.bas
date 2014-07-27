@@ -104,9 +104,10 @@ Public runMode As OperatingMode
 
 Public Sub sendSettingValue(settingCommand As Integer, _
                             Optional commandValue As Integer = 0)
+If (OFFLINE <> runMode) Then
+    sendCommand Chr(COMMAND_BASE + settingCommand), commandValue
+End If
 
-sendCommand Chr(COMMAND_BASE + settingCommand), commandValue
-                        
 End Sub
 
 Public Sub sendSetting(sendIndex As Integer)
