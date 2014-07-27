@@ -6,7 +6,7 @@
 
 "Store" - tells the module to copy the current settings to EEPROM. Settings are copied from EEPROM when power is applied to the module.
 
-"Reset" - tells the module to copy the current settings from EEPROM, i.e. forget any changes since the last "Store". Equivalent of removing then applying power to the module.
+"Reset" - tells the module to copy the current settings from EEPROM, i.e. forget any changes since the last "Store". Equivalent of removing then applying power to the module. Note that the SemaSet utility cannot reset to these as it does not know what the modules EEPROM values are.
 
 "Centre" - centres the value slider and set value accordingly.
 
