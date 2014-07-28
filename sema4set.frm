@@ -865,6 +865,19 @@ End If
 
 End Function
 
+Private Function getExtendedTravelSelection(index As Integer) As Integer
+
+getExtendedTravelSelection = Choose(index + 1, SRV1_XTND_MASK, _
+                                               SRV2_XTND_MASK, _
+                                               SRV3_XTND_MASK, _
+                                               SRV4_XTND_MASK)
+
+If Null = getExtendedTravelSelection Then
+    getExtendedTravelSelection = 0
+End If
+
+End Function
+
 Private Sub checkIfSaveNeeded(Optional beforeAction As String = "overwriting")
 ' Check if any settings have been changed and if so offer a chance to save
 ' these before proceeding
@@ -1803,19 +1816,24 @@ End If
 
 End Sub
 
-Private Sub xtndTravelSelection_Click(Index As Integer)
+Private Sub xtndTravelSelection_Click(index As Integer)
 
-sendSettingValue TRVL_SETTING, getExtendedTravelSelections
+If (vbChecked = xtndTravelSelection(index).Value) Then
+    sendSettingValue TRVL_ON, getExtendedTravelSelection(index)
+Else
+    sendSettingValue TRVL_OFF, getExtendedTravelSelection(index)
+End If
+
 settingsChanged = True
 
 End Sub
 
-Private Sub bounceSelection_Click(Index As Integer)
+Private Sub bounceSelection_Click(index As Integer)
 
-If (vbChecked = bounceSelection(Index).Value) Then
-    selectBounce Index
+If (vbChecked = bounceSelection(index).Value) Then
+    selectBounce index
 Else
-    deselectBounce Index
+    deselectBounce index
 End If
 
 settingsChanged = True
