@@ -145,7 +145,7 @@ Sema4c involved addition of the drive shutoff option and a change to the cycle a
 
 Sema4g added discrete commands to either enable or disable selection of normal (1 - 2 mSec) or extended travel (0.5 - 2.5 mSec) pulse duration, i.e. one to turn it on and another to turn it off rather than doing both operations with the single command (79 - y):
 
-80 - z - Enable extended travel pulse
+7A - z - Enable extended travel pulse
     The value sent with this command is a decimal number representing a single
     byte bit field as follows:
         bit 7 - Enable servo 4 extended travel
@@ -153,7 +153,7 @@ Sema4g added discrete commands to either enable or disable selection of normal (
         bit 3 - Enable servo 2 extended travel
         bit 2 - Enable servo 1 extended travel
 
-81 - { - Disable extended travel pulse
+7B - { - Disable extended travel pulse
     The value sent with this command is a decimal number representing a single
     byte bit field as follows:
         bit 7 - Disable servo 4 extended travel

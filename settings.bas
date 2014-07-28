@@ -93,8 +93,10 @@ Public Const SETTINGS_FILE_FORMAT_VERSION As Integer = 0
 Public settingsFilename As String
 
 ' Transmitted command characters
-Public Const COMMAND_BASE  As Integer = 65 ' ASCII A
-Public Const TRVL_SETTING  As Integer = 56
+Public Const COMMAND_BASE  As Integer = 65 ' Command   0 = 0x41 = ASCII A
+Public Const TRVL_SETTING  As Integer = 56 ' Command 121 = 0x79 = ASCII y
+Public Const TRVL_ON       As Integer = 57 ' Command 122 = 0x7A = ASCII z
+Public Const TRVL_OFF      As Integer = 58 ' Command 123 = 0x7B = ASCII {
 Public Const STORE_COMMAND As String = "@"
 Public Const RESET_COMMAND As String = "#"
 Public Const RUN_COMMAND   As String = "$"
