@@ -91,6 +91,16 @@ For n = 1 To sendItterations
     End If
 Next
 
+If (sema4Port.PortOpen) Then
+    While (sema4Port.InBufferCount > 0)
+        ' Dump any received characters to avoid buffer overrun
+        sema4Port.InBufferCount = 0
+    
+        ' Perform event dispatch to keep GUI alive
+        DoEvents
+    Wend
+End If
+
 Exit Sub
 
 comPortFailure:
