@@ -2,7 +2,7 @@ Attribute VB_Name = "commport"
 Option Explicit
 
 ' Number of times to send a non streaming command or setting string
-Public Const SEND_ITTERATIONS As Integer = 7
+Public Const SEND_ITTERATIONS As Integer = 4
 
 Public Const SYNCH_BYTE    As Integer = 0  ' ASCII null
 
@@ -36,6 +36,8 @@ Else
     ' Set new COM port number and open COM port
     sema4Port.commport = newComPortNumber
     sema4Port.PortOpen = True
+    sema4Port.InBufferCount = 0
+    sema4Port.OutBufferCount = 0
 
     selectComPort = "COM" + selectComPort
 End If
@@ -80,26 +82,21 @@ Dim n As Integer
 On Error GoTo comPortFailure
 
 For n = 1 To sendItterations
-    ' Perform event dispatch to keep GUI alive
-    DoEvents
+    ' Perform event dispatch to keep GUI alive until TX buffer is empty
+    While (sema4Port.OutBufferCount > 0)
+        DoEvents
+    Wend
 
     If (sema4Port.PortOpen) Then
+        ' Dump any received characters to avoid buffer overrun
+        sema4Port.InBufferCount = 0
+
         ' Send command and value
         sema4Port.Output = Chr(SYNCH_BYTE) _
                            + commandCharacter _
                            + Format(commandValue, "000")
     End If
 Next
-
-If (sema4Port.PortOpen) Then
-    While (sema4Port.InBufferCount > 0)
-        ' Dump any received characters to avoid buffer overrun
-        sema4Port.InBufferCount = 0
-    
-        ' Perform event dispatch to keep GUI alive
-        DoEvents
-    Wend
-End If
 
 Exit Sub
 

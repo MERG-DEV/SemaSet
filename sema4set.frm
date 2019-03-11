@@ -1650,6 +1650,7 @@ End Sub
 
 Private Sub Form_Unload(Cancel As Integer)
 
+runMode = RUNNING
 checkIfSaveNeeded "exiting"
 
 End

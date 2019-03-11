@@ -126,6 +126,9 @@ Public Sub streamCurrentSetting()
 While (SETTING = runMode)
     ' Send setting command and value for currently selected setting
     sendSetting settingIndex
+
+    ' Perform event dispatch to keep GUI alive
+    DoEvents
 Wend
 
 End Sub
