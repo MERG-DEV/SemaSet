@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<resource xmlns="http://www.wxwidgets.org/wxxrc" version="2.5.3.0">
+	<object class="wxFrame" name="MainFrame">
+		<title>SemaSet</title>
+		<object class="wxMenuBar">
+			<object class="wxMenu">
+				<label>&amp;Configuration</label>
+				<object class="wxMenuItem" name="cmLoadConfiguration">
+					<label>&amp;Load</label>
+					<help>Load configuration from a file</help>
+				</object>
+				<object class="wxMenuItem" name="cmExit">
+					<label>e&amp;Xit</label>
+					<accel>Alt-F4</accel>
+					<help>Exit the application</help>
+				</object>
+	  	</object>
+			<object class="wxMenu">
+				<label>&amp;Help</label>
+				<object class="wxMenuItem" name="cmAbout">
+					<label>&amp;About</label>
+					<accel>F1</accel>
+					<help>Show info about this application</help>
+				</object>
+			</object>
+		</object>
+		<object class="wxStatusBar" name="cmMainStatusBar">
+			<fields>1</fields>
+			<widths>-1</widths>
+			<styles>wxSB_NORMAL</styles>
+		</object>
+	</object>
+</resource>

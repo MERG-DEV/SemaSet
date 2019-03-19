@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<wxsmith>
+	<resource_extra>
+		<object root="1" />
+		<object name="cmLoadConfiguration" class="wxMenuItem" member="no">
+			<handler function="on_load_codes" entry="EVT_MENU" />
+		</object>
+		<object name="cmExit" class="wxMenuItem" member="no">
+			<handler function="on_quit" entry="EVT_MENU" />
+		</object>
+		<object name="cmAbout" class="wxMenuItem" member="no">
+			<handler function="on_about" entry="EVT_MENU" />
+		</object>
+		<object name="cmMainStatusBar" class="wxStatusBar" variable="m_statusbar" member="yes" />
+	</resource_extra>
+</wxsmith>

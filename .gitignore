@@ -1,0 +1,12 @@
+*.cab
+*.depend
+*.exe
+*.layout
+*.log
+*.pdm
+*~
+**/installer
+**/package
+**/l32
+**/l64
+**/w32

@@ -3,45 +3,230 @@
 	<FileVersion major="1" minor="6" />
 	<Project>
 		<Option title="SemaSet" />
-		<Option pch_mode="2" />
+		<Option platforms="Windows;Unix;" />
 		<Option compiler="gcc" />
 		<Build>
-			<Target title="Debug">
-				<Option output="l64/bin/Debug/SemaSet" prefix_auto="1" extension_auto="1" />
+			<Target title="L64Debug">
+				<Option platforms="Unix;" />
+				<Option output="l64/bin/Debug/SemaSetWxL64" prefix_auto="1" extension_auto="1" />
 				<Option object_output="l64/obj/Debug/" />
 				<Option type="0" />
 				<Option compiler="gcc" />
 				<Option projectLinkerOptionsRelation="2" />
 				<Compiler>
+					<Add option="-m64" />
 					<Add option="-g" />
+					<Add option="`wx-config --version=3.1 --static=no --unicode=yes --debug=yes --cflags`" />
 				</Compiler>
+				<Linker>
+					<Add option="-m64" />
+					<Add option="`wx-config --version=3.1 --static=no --unicode=yes --debug=yes --libs`" />
+				</Linker>
 			</Target>
-			<Target title="Release">
-				<Option output="l64/bin/Release/SemaSet" prefix_auto="1" extension_auto="1" />
+			<Target title="L64Release">
+				<Option platforms="Unix;" />
+				<Option output="l64/bin/Release/SemaSetWxL64" prefix_auto="1" extension_auto="1" />
 				<Option object_output="l64/obj/Release/" />
 				<Option type="0" />
 				<Option compiler="gcc" />
 				<Option projectLinkerOptionsRelation="2" />
 				<Compiler>
 					<Add option="-O2" />
+					<Add option="-m64" />
+					<Add option="`wx-config --version=3.1 --static=no --unicode=yes --debug=no --cflags`" />
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
+					<Add option="-static-libstdc++" />
+					<Add option="-static-libgcc" />
+					<Add option="-static" />
+					<Add option="-m64" />
+					<Add option="`wx-config --version=3.1 --static=no --unicode=yes --debug=no --libs`" />
+				</Linker>
+			</Target>
+			<Target title="L32Debug">
+				<Option platforms="Unix;" />
+				<Option output="l32/bin/Debug/SemaSetWxL32" prefix_auto="1" extension_auto="1" />
+				<Option object_output="l32/obj/Debug/" />
+				<Option type="0" />
+				<Option compiler="gcc" />
+				<Option projectCompilerOptionsRelation="-1" />
+				<Option projectLinkerOptionsRelation="-1" />
+				<Option projectIncludeDirsRelation="-1" />
+				<Option projectLibDirsRelation="-1" />
+				<Compiler>
+					<Add option="-m32" />
+					<Add option="-march=i386" />
+					<Add option="-g" />
+					<Add option="`/usr/lib/i386-linux-gnu/wx/config/gtk2-unicode-3.1-unofficial --version=3.1 --static=no --unicode=yes --debug=yes --cflags`" />
+				</Compiler>
+				<Linker>
+					<Add option="-m32" />
+					<Add option="`/usr/lib/i386-linux-gnu/wx/config/gtk2-unicode-3.1-unofficial --version=3.1 --static=no --unicode=yes --debug=yes --libs`" />
+				</Linker>
+			</Target>
+			<Target title="L32Release">
+				<Option platforms="Unix;" />
+				<Option output="l32/bin/Release/SemaSetWxL32" prefix_auto="1" extension_auto="1" />
+				<Option object_output="l32/obj/Release/" />
+				<Option type="0" />
+				<Option compiler="gcc" />
+				<Option projectLinkerOptionsRelation="2" />
+				<Compiler>
+					<Add option="-march=i386" />
+					<Add option="-O2" />
+					<Add option="-m32" />
+					<Add option="`/usr/lib/i386-linux-gnu/wx/config/gtk2-unicode-3.1-unofficial --version=3.1 --static=no --unicode=yes --debug=no --cflags`" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+					<Add option="-static-libstdc++" />
+					<Add option="-static-libgcc" />
+					<Add option="-static" />
+					<Add option="-m32" />
+					<Add option="`/usr/lib/i386-linux-gnu/wx/config/gtk2-unicode-3.1-unofficial --version=3.1 --static=no --unicode=yes --debug=no --libs`" />
+				</Linker>
+			</Target>
+			<Target title="W32Debug">
+				<Option platforms="Windows;" />
+				<Option output="w32/bin/Debug/SemaSetWxW32" prefix_auto="1" extension_auto="1" />
+				<Option object_output="w32/obj/Debug/" />
+				<Option type="0" />
+				<Option compiler="gcc" />
+				<Option projectLinkerOptionsRelation="2" />
+				<Compiler>
+					<Add option="-march=i386" />
+					<Add option="-m32" />
+					<Add option="-g" />
+					<Add option="-include wx_pch.h" />
+					<Add option="-mthreads" />
+					<Add option="-pipe" />
+					<Add option="-Winvalid-pch" />
+					<Add option="-D__GNUWIN32__" />
+					<Add option="-D__WXDEBUG__" />
+					<Add option="-D__WXMSW__" />
+					<Add option="-DWX_PRECOMP" />
+					<Add option="-DwxUSE_UNICODE" />
+					<Add option="-DWXUSINGDLL" />
+					<Add directory="C:/wxWidgets-3.1.1/include" />
+					<Add directory="C:/wxWidgets-3.1.1/lib/gcc_dll/mswud" />
+				</Compiler>
+				<ResourceCompiler>
+					<Add directory="C:/wxWidgets-3.1.1/include" />
+					<Add directory="C:/wxWidgets-3.1.1/lib/gcc_dll/mswud" />
+				</ResourceCompiler>
+				<Linker>
+					<Add option="-m32" />
+					<Add option="-mthreads" />
+					<Add library="MonitorUtility" />
+					<Add library="wxmsw31ud_xrc" />
+					<Add library="wxmsw31ud_adv" />
+					<Add library="wxbase31ud_xml" />
+					<Add library="wxexpatd" />
+					<Add library="wxmsw31ud_core" />
+					<Add library="wxbase31ud" />
+					<Add library="wxjpegd" />
+					<Add library="wxpngd" />
+					<Add library="wxtiffd" />
+					<Add library="wxzlibd" />
+					<Add directory="C:/wxWidgets-3.1.1/lib/gcc_dll" />
+					<Add directory="../c++/utility/w32/bin/Debug" />
+				</Linker>
+			</Target>
+			<Target title="W32Release">
+				<Option platforms="Windows;" />
+				<Option output="w32/bin/Release/SemaSetWxW32" prefix_auto="1" extension_auto="1" />
+				<Option object_output="w32/obj/Release/" />
+				<Option type="0" />
+				<Option compiler="gcc" />
+				<Option projectLinkerOptionsRelation="2" />
+				<Compiler>
+					<Add option="-march=i386" />
+					<Add option="-O2" />
+					<Add option="-m32" />
+					<Add option="-include wx_pch.h" />
+					<Add option="-mthreads" />
+					<Add option="-pipe" />
+					<Add option="-Winvalid-pch" />
+					<Add option="-D__GNUWIN32__" />
+					<Add option="-D__WXMSW__" />
+					<Add option="-DWX_PRECOMP" />
+					<Add option="-DwxUSE_UNICODE" />
+					<Add directory="C:/wxWidgets-3.1.1/include" />
+					<Add directory="C:/wxWidgets-3.1.1/lib/gcc_lib/mswu" />
+				</Compiler>
+				<ResourceCompiler>
+					<Add directory="C:/wxWidgets-3.1.1/include" />
+					<Add directory="C:/wxWidgets-3.1.1/lib/gcc_lib/mswu" />
+				</ResourceCompiler>
+				<Linker>
+					<Add option="-s" />
+					<Add option="-static-libstdc++" />
+					<Add option="-static-libgcc" />
+					<Add option="-static" />
+					<Add option="-m32" />
+					<Add option="-mthreads" />
+					<Add library="wxmsw31u_xrc" />
+					<Add library="wxmsw31u_adv" />
+					<Add library="wxmsw31u_core" />
+					<Add library="wxbase31u" />
+					<Add library="wxjpeg" />
+					<Add library="wxpng" />
+					<Add library="wxtiff" />
+					<Add library="wxzlib" />
+					<Add library="atomic" />
+					<Add library="kernel32" />
+					<Add library="user32" />
+					<Add library="gdi32" />
+					<Add library="winspool" />
+					<Add library="comdlg32" />
+					<Add library="advapi32" />
+					<Add library="shell32" />
+					<Add library="ole32" />
+					<Add library="oleaut32" />
+					<Add library="uuid" />
+					<Add library="comctl32" />
+					<Add library="wsock32" />
+					<Add library="odbc32" />
+					<Add library="shlwapi" />
+					<Add library="version" />
+					<Add library="uxtheme" />
+					<Add library="oleacc" />
+					<Add library="winmm" />
+					<Add directory="C:/wxWidgets-3.1.1/lib/gcc_lib" />
+					<Add directory="../c++/utility/w32/bin/Release" />
 				</Linker>
 			</Target>
 		</Build>
 		<Compiler>
-			<Add option="`wx-config --cflags`" />
-			<Add option="-Wall" />
+			<Add directory="../c++" />
 		</Compiler>
-		<Linker>
-			<Add option="`wx-config --libs`" />
-		</Linker>
+		<Unit filename="App.cpp" />
+		<Unit filename="App.h" />
+		<Unit filename="MainFrame.cpp" />
+		<Unit filename="MainFrame.h" />
+		<Unit filename="resource.rc">
+			<Option compilerVar="WINDRES" />
+			<Option target="W32Debug" />
+			<Option target="W32Release" />
+		</Unit>
+		<Unit filename="wx_pch.h">
+			<Option compile="1" />
+			<Option weight="0" />
+		</Unit>
+		<Unit filename="wxsmith/MainFrame.wxs" />
 		<Extensions>
-			<envvars />
 			<code_completion />
-			<lib_finder disable_auto="1" />
+			<envvars />
 			<debugger />
+			<wxsmith version="1">
+				<gui name="wxWidgets" src="App.cpp" main="MainFrame" init_handlers="necessary" language="CPP">
+					<load_resource file="MainFrame.xrc" />
+				</gui>
+				<resources>
+					<wxFrame wxs="wxsmith/MainFrame.wxs" src="MainFrame.cpp" hdr="MainFrame.h" xrc="MainFrame.xrc" fwddecl="0" i18n="1" name="MainFrame" language="CPP" />
+				</resources>
+			</wxsmith>
 		</Extensions>
 	</Project>
 </CodeBlocks_project_file>
